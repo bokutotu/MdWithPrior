@@ -7,6 +7,7 @@ from src.features.dihedral import DihdrralLayer
 
 
 def test_cal_distance():
+    """test calculation result is collect"""
     input = torch.tensor([[0., 0., 0.], [1., 0., 0.],
                           [3., 2., 1.]], ).view(1, 3, 3)
     layer = DistanceLayer()
@@ -16,6 +17,7 @@ def test_cal_distance():
 
 
 def test_cal_angles():
+    """test calculation result is collect"""
     input = torch.tensor([[0., 0., 0.], [1., 0., 0.],
                           [3., 2., 1.]], ).view(1, 3, 3)
     layer = AngleLayer()
@@ -25,6 +27,7 @@ def test_cal_angles():
 
 
 def test_cal_dihedral():
+    """test calculation result is collect"""
     array = [
             [24.969, 13.428, 30.692],
             [24.044, 12.661, 29.808],
