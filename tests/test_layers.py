@@ -3,6 +3,8 @@ import numpy as np
 
 from src.layers.prior import PriorEnergyLayer
 from src.layers.normalize import NormalizeLayer
+from src.layers.lstm import LSTM
+from src.layers.mlp import MLP
 
 
 def numpy_z_socore_normalize(x, sigma, myu):
@@ -53,3 +55,20 @@ def test_prior_layer():
         assert True
     else:
         assert False
+
+
+def test_lstm_output_size():
+    lstm_layer = LSTM(num_layers=5, dropout=0., input_size=100,
+                      hidden_size=126, output_size=1)
+    input_tensor = torch.rand((10, 64, 100))
+    output = lstm_layer(input_tensor)
+    print(output.size())
+    assert list(output.size()) == [10, 64, 1]
+
+
+def test_mlp_output_size():
+    mlp_layer = MLP(num_layers=5, dropout=0., input_size=100,
+                    hidden_size=126, output_size=1, activate_function="ReLU")
+    input_tensor = torch.rand((10, 100))
+    output = mlp_layer(input_tensor)
+    assert list(output.size()) == [10, 1]
