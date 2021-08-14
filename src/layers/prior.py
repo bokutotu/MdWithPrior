@@ -21,4 +21,4 @@ class PriorEnergyLayer(torch.nn.Module):
         self.r = torch.nn.Parameter(torch.rand(size), requires_grad=True)
 
     def forward(self, x):
-        return self.k * (x - self.r)**2
+        return (self.k * (x - self.r)**2)

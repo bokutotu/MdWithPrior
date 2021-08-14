@@ -6,6 +6,8 @@ defaults:
   - optimizer: adam
   - scheduler: step
   - logger: mlflow
+  - models: lstm
+  - dataset: lstm
 
   # enable color logging
   - override hydra/job_logging: colorlog

@@ -5,28 +5,36 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 
-class Dataset(torch.utils.data.Dataset):
-    def __len__(self) -> None:
-        return len(self.dataset)
+class MLPDataset(Dataset):
 
-    def __getitem__(self, key: Union[int, slice]) -> Union[Tensor, List[Tensor]]:
-        return self.dataset[key]
+    def __init__(self, coordinates, forces):
+        self.coordinates = coordinates
+        self.forces = forces
 
+    def __len__(self):
+        return len(self.coordinates)
 
-class TrainDataset(Dataset):
-    def __init__(self) -> None:
-        super().__init__()
-        # like a dataset of images
-        self.dataset = [torch.randn(1, 28, 28) for _ in range(80000)]
-
-
-class ValDataset(Dataset):
-    def __init__(self) -> None:
-        super().__init__()
-        self.dataset = [torch.randn(1, 28, 28) for _ in range(10000)]
+    def __getitem__(self, idx):
+        return (
+            torch.tensor(self.coordinates[idx], requireds_grad=True),
+            torch.tensor(self.forces[idx], requireds_grad=True)
+        )
 
 
-class TestDataset(Dataset):
-    def __init__(self) -> None:
-        super().__init__()
-        self.dataset = [torch.randn(1, 28, 28) for _ in range(10000)]
+class LSTMDataset(Dataset):
+
+    def __init__(self, coordinates, forces, features_length):
+        self.coordinates = coordinates
+        self.forces = forces
+        self.features_length = features_length
+
+    def __len__(self):
+        return len(self.coordinates) - self.features_length
+
+    def __getitem__(self, idx):
+        return (
+            torch.tensor(
+                self.coordinates[idx:idx+self.features_length], requireds_grad=True),
+            torch.tensor(
+                self.forces[idx:idx+self.features_length], requireds_grad=True)
+        )

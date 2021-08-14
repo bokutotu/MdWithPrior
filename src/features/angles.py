@@ -22,8 +22,9 @@ class AngleLayer(torch.nn.Module):
         inner_product = torch.sum(
             (before_vec - basic_vec) * (after_vec - basic_vec), dim=-1)
 
-        norm_product = torch.norm(
-            before_vec - basic_vec, p=2, dim=-1) * torch.norm(after_vec - basic_vec, p=2, dim=-1)
+        tmp_a = torch.norm(before_vec - basic_vec, p=2, dim=-1)
+        tmp_b = torch.norm(after_vec - basic_vec, p=2, dim=-1)
+        norm_product = tmp_a * tmp_b
 
         cos_tensor = inner_product / norm_product
         return cos_tensor
@@ -45,7 +46,9 @@ class AngleLayer(torch.nn.Module):
             return self._cal_angles(coordinates)
 
         elif len(size) == 4:
-            return self._cal_angles(coordinates.view(-1, size[1], size[2])).view(size[0], size[1], size[2])
+            return self._cal_angles(
+                coordinates.view(-1, size[1], size[2])).view(size[0], size[1], size[2])
         else:
             ValueError(
-                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}".format(len(size)))
+                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}"
+                .format(len(size)))

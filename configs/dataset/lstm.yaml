@@ -1,0 +1,5 @@
+# @package dataset
+
+_target_: src.dataset.LSTMDataset
+
+features_length: 64

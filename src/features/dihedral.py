@@ -30,7 +30,7 @@ def outer(a, b):
     return out
 
 
-class DihdrralLayer(torch.nn.Module):
+class DihedralLayer(torch.nn.Module):
     """calulate dihedral sin and cosines
     I'm using [stackoverflow](https://stackoverflow.com/questions/20305272/dihedral-torsion-angle-from-four-points-in-cartesian-coordinates-in-python) as a reference.
     """
@@ -91,7 +91,9 @@ class DihdrralLayer(torch.nn.Module):
         if len(size) == 3:
             return self._cal_dihedral(coordinates)
         elif len(size) == 4:
-            return self._cal_dihedral(coordinates.view(-1, size[1], size[2])).view(size[0], size[1], size[2])
+            return self._cal_dihedral(coordinates.view(-1, size[1], size[2])) \
+                .view(size[0], size[1], size[2])
         else:
             ValueError(
-                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}".format(len(size)))
+                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}"
+                .format(len(size)))

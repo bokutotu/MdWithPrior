@@ -1,7 +1,7 @@
 import torch
 
 
-class DistanceLayer(torch.nn.Module):
+class LengthLayer(torch.nn.Module):
     """Calulate distances of coordinates
 
 

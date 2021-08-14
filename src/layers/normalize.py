@@ -26,8 +26,8 @@ class NormalizeLayer(torch.nn.Module):
         ----------
         x: torch.tensor
             2-D or 3-D tensor 
-            if 2-D -> (batch, features)
-            if 3-D -> (batch, length of features, features)
+            if 2-D -> (batch, features, 1)
+            if 3-D -> (batch, length of features, features, 1)
         """
 
         x = (x - self.mean) / self.std

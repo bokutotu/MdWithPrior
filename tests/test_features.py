@@ -1,16 +1,16 @@
 import torch
 import numpy as np
 
-from src.features.distances import DistanceLayer
+from src.features.length import LengthLayer
 from src.features.angles import AngleLayer
-from src.features.dihedral import DihdrralLayer
+from src.features.dihedral import DihedralLayer
 
 
 def test_cal_distance():
     """test calculation result is collect"""
     input = torch.tensor([[0., 0., 0.], [1., 0., 0.],
                           [3., 2., 1.]], ).view(1, 3, 3)
-    layer = DistanceLayer()
+    layer = LengthLayer()
     output = layer(input)
     ans = torch.tensor([[1.0, 3.0]])
     np.testing.assert_allclose(ans.numpy(), output.numpy())
@@ -35,7 +35,7 @@ def test_cal_dihedral():
             [21.951, 13.670, 30.431],
     ]
     input = torch.tensor(array).view(1, 4, 3)
-    layer = DihdrralLayer()
+    layer = DihedralLayer()
     output = layer(input)
     ans = torch.tensor([[np.sin(-71.21515), np.cos(-71.21515)]])
     np.testing.assert_allclose(ans.numpy(), ans.numpy())
