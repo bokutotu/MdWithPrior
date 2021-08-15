@@ -9,8 +9,6 @@ def get_statics(coordinates):
 
     coordinates: numpy.array
     """
-    coordinates = torch.tensor(coordinates)
-
     angles = AngleLayer()(coordinates)
     lengths = LengthLayer()(coordinates)
     dihedrals = DihedralLayer()(coordinates)

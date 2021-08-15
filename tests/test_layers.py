@@ -35,12 +35,12 @@ def test_prior_layer():
 
     optim = torch.optim.SGD(layer.parameters(), lr=0.01)
     loss = torch.nn.MSELoss()
-    input = torch.rand((1000, 10))
+    input = torch.rand((10000, 10))
     def func(x): return true_k * (x - true_r) ** 2
     first_loss = loss(layer(input), func(input))
 
     for i in range(1000):
-        input = torch.rand(100, 10)
+        input = torch.rand(10000, 10)
         out = layer(input)
         batch_loss = loss(out, func(input))
         batch_loss.backward()
