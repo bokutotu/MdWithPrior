@@ -13,7 +13,7 @@ def dot(a, b):
     """
     if a.size() != b.size():
         raise ValueError("input tensor shape is not same")
-    return torch.sum(a * b, dim=-1)
+    return torch.sum(a * b, dim=-1).unsqueeze(dim=-1)
 
 
 def outer(a, b):
@@ -57,13 +57,15 @@ class DihedralLayer(torch.nn.Module):
 
         # normalize b1 so that it does not influence magnitude of vector
         # rejections that come next
-        b1 /= torch.norm(b1, dim=-1, p=2)
+        b1 /= torch.linalg.norm(b1, )
 
         # vector rejections
         # v = projection of b0 onto plane perpendicular to b1
         #   = b0 minus component that aligns with b1
         # w = projection of b2 onto plane perpendicular to b1
         #   = b2 minus component that aligns with b1
+        print(dot(b0, b1).size())
+        print(b1.size())
         v = b0 - dot(b0, b1)*b1
         w = b2 - dot(b2, b1)*b1
 
@@ -72,7 +74,6 @@ class DihedralLayer(torch.nn.Module):
         x = dot(v, w)
         y = dot(outer(b1, v), w)
         rad = torch.atan2(y, x)
-        print(rad)
         return torch.cat([torch.sin(rad), torch.cos(rad)], dim=-1)
 
     def forward(self, coordinates):
@@ -89,9 +90,9 @@ class DihedralLayer(torch.nn.Module):
         """
         size = coordinates.size()
         if len(size) == 3:
-            return self._cal_dihedral(coordinates)
+            return self._cal_dihedral(coordinates).view(size[0], (size[1]-3)*2)
         elif len(size) == 4:
-            return self._cal_dihedral(coordinates.view(-1, size[1], size[2])) \
+            return self._cal_dihedral(coordinates.view(-1, size[1], (size[2]-3))) \
                 .view(size[0], size[1], size[2])
         else:
             ValueError(

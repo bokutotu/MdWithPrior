@@ -37,5 +37,8 @@ def test_cal_dihedral():
     input = torch.tensor(array).view(1, 4, 3)
     layer = DihedralLayer()
     output = layer(input)
-    ans = torch.tensor([[np.sin(-71.21515), np.cos(-71.21515)]])
-    np.testing.assert_allclose(ans.numpy(), ans.numpy())
+
+    rad = np.radians(-71.21515)
+
+    ans = np.array([[np.sin(rad), np.cos(rad)]], dtype=np.float32)
+    np.testing.assert_allclose(output.numpy(), ans, rtol=1e-6)
