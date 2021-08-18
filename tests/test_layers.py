@@ -27,13 +27,25 @@ def test_normalize_layer():
     np.testing.assert_allclose(ans, output.numpy())
 
 
+def test_can_cal_grad_normalize():
+    num_atom = 10
+
+    mean = torch.rand((num_atom))
+    std = torch.rand((num_atom))
+
+    x = torch.rand((10, 10), requires_grad=True)
+
+    output = NormalizeLayer(mean, std)(x)
+    torch.autograd.grad(torch.sum(output), x, create_graph=True, retain_graph=True)
+
+
 def test_prior_layer():
     """test Prior Layer Can Learn"""
     layer = PriorEnergyLayer(10)
     true_k = torch.randn(10)
     true_r = torch.rand(10)
 
-    optim = torch.optim.SGD(layer.parameters(), lr=0.01)
+    optim = torch.optim.SGD(layer.parameters(), lr=0.001)
     loss = torch.nn.MSELoss()
     input = torch.rand((10000, 10))
     def func(x): return true_k * (x - true_r) ** 2

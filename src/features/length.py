@@ -43,7 +43,10 @@ class LengthLayer(torch.nn.Module):
             return self._call_distances(coordinates)
 
         elif len(size) == 4:
-            return self._call_distances(coordinates.view(-1, size[1], size[2])).view(size[0], size[1], size[2])
+            return self._call_distances(
+                coordinates.view(size[0] * size[1], size[2], size[3])) \
+                    .view(size[0], size[1], size[2]-1)
         else:
             ValueError(
-                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}".format(len(size)))
+                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}"
+                    .format(len(size)))

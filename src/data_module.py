@@ -4,9 +4,11 @@ from typing import Optional
 import numpy as np
 from hydra.utils import instantiate
 import pytorch_lightning as pl
-from src.dataset import MLPDataset, LSTMDataset
-from torch.utils.data import DataLoader
 
+from torch.utils.data import DataLoader
+from torch.utils.data import RandomSampler
+
+from src.dataset import MLPDataset, LSTMDataset
 
 class DataModule(pl.LightningDataModule):
     def __init__(self, batch_size, coordinates_path,
@@ -21,8 +23,8 @@ class DataModule(pl.LightningDataModule):
         val_last_idx = int(train_test_rate * len_coord)
 
         self.train_coord = coordinates[0:train_last_idx]
-        self.train_force = forces[0: train_test_rate]
-        self.val_coord = coordinates[train_test_rate: val_last_idx]
+        self.train_force = forces[0: train_last_idx]
+        self.val_coord = coordinates[train_last_idx: val_last_idx]
         self.val_force = forces[train_last_idx: val_last_idx]
         self.test_coord = coordinates[val_last_idx:-1]
         self.test_force = forces[val_last_idx: -1]
@@ -52,24 +54,21 @@ class DataModule(pl.LightningDataModule):
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
-            num_workers=os.cpu_count(),
-            # pin_memory=True,
+            sampler=RandomSampler(self.train)
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             self.val,
             batch_size=self.batch_size,
-            num_workers=os.cpu_count(),
-            # pin_memory=True,
+            sampler=RandomSampler(self.val)
         )
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
             self.test,
             batch_size=self.batch_size,
-            num_workers=os.cpu_count(),
-            # pin_memory=True,
+            sampler=RandomSampler(self.test)
         )
 
     def teardown(self, stage: Optional[str] = None):
