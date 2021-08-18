@@ -34,11 +34,37 @@ def test_cal_dihedral():
             [22.785, 13.482, 29.543],
             [21.951, 13.670, 30.431],
     ]
-    input = torch.tensor(array).view(1, 4, 3)
+    input = torch.tensor(array, requires_grad=True).view(1, 4, 3)
     layer = DihedralLayer()
     output = layer(input)
 
     rad = np.radians(-71.21515)
 
     ans = np.array([[np.sin(rad), np.cos(rad)]], dtype=np.float32)
-    np.testing.assert_allclose(output.numpy(), ans, rtol=1e-6)
+    np.testing.assert_allclose(output.detach().numpy(), ans, rtol=1e-6)
+
+
+def test_can_cal_grad_features():
+    angle_layer = AngleLayer()
+    length_layer = LengthLayer()
+    dihedral_layer = DihedralLayer()
+
+    input_tesnor = torch.rand((10, 10, 3), requires_grad=True)
+
+    angle = angle_layer(input_tesnor)
+    length = length_layer(input_tesnor)
+    dihedral = dihedral_layer(input_tesnor)
+
+    features = torch.cat([angle, length], dim=-1)
+
+    grad = torch.autograd.grad(torch.sum(angle), input_tesnor, 
+                create_graph=True, retain_graph=True)
+
+    grad = torch.autograd.grad(torch.sum(length), input_tesnor, 
+                create_graph=True, retain_graph=True)
+
+    grad = torch.autograd.grad(torch.sum(dihedral), input_tesnor, 
+                create_graph=True, retain_graph=True)
+
+    grad = torch.autograd.grad(torch.sum(features), input_tesnor, 
+                create_graph=True, retain_graph=True)

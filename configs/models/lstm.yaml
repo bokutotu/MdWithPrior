@@ -1,8 +1,8 @@
-# @package model
+# @package models
 
 _target_: src.layers.lstm.LSTM
 
-num_layers: 10
+num_layers: 2
 dropout: 0.0
 hidden_size: 256
 output_size: 1

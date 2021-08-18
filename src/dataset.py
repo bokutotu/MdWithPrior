@@ -16,8 +16,8 @@ class MLPDataset(Dataset):
 
     def __getitem__(self, idx):
         return (
-            torch.tensor(self.coordinates[idx], requireds_grad=True),
-            torch.tensor(self.forces[idx], requireds_grad=True)
+            torch.tensor(self.coordinates[idx], requires_grad=True),
+            torch.tensor(self.forces[idx], requires_grad=True)
         )
 
 
@@ -32,9 +32,11 @@ class LSTMDataset(Dataset):
         return len(self.coordinates) - self.features_length
 
     def __getitem__(self, idx):
+        input_array = torch.tensor(
+            self.coordinates[idx: idx+self.features_length], requires_grad=True)
+        target_array = torch.tensor(
+            self.forces[idx: idx+self.features_length], requires_grad=True)
         return (
-            torch.tensor(
-                self.coordinates[idx:idx+self.features_length], requireds_grad=True),
-            torch.tensor(
-                self.forces[idx:idx+self.features_length], requireds_grad=True)
+            input_array,
+            target_array
         )

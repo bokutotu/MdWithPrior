@@ -11,7 +11,7 @@ from src.layers.prior import PriorEnergyLayer
 from src.layers.normalize import NormalizeLayer
 
 from src.features.angles import AngleLayer
-from src.features.dihedral import DihdrralLayer
+from src.features.dihedral import DihedralLayer
 from src.features.length import LengthLayer
 
 
@@ -51,23 +51,23 @@ class CGnet(nn.Module):
 
     def __init__(
             self, config, num_atom,
-            angle_mean=None, agnle_std=None,
+            angle_mean=None, angle_std=None,
             dihedral_mean=None, dihedral_std=None,
             length_mean=None, length_std=None):
-
+        super().__init__()
         self.config = config
 
         self.cal_angle_layer = AngleLayer()
-        slef.cal_dihedral_layer = DihdrralLayer()
-        self.cal_length_layer = lengthLayer()
+        self.cal_dihedral_layer = DihedralLayer()
+        self.cal_length_layer = LengthLayer()
 
         # define Prior Energy Layer
         if config.is_angle_prior:
-            self.angle_prior_layer = PriorEnergyLayer(num_atom)
+            self.angle_prior_layer = PriorEnergyLayer(num_atom - 2)
         if config.is_length_prior:
-            self.length_prior_layer = PriorEnergyLayer(num_atom)
+            self.length_prior_layer = PriorEnergyLayer(num_atom - 1)
         if config.is_dihedral_prior:
-            self.dihedral_prior_layer = PriorEnergyLayer(num_atom)
+            self.dihedral_prior_layer = PriorEnergyLayer(2 * (num_atom - 3))
 
         if config.is_normalize:
             self.angle_normalize_layer = self._define_normalize_layer(
@@ -76,11 +76,18 @@ class CGnet(nn.Module):
             self.length_normalize_layer = self._define_normalize_layer(
                 length_mean, length_std
             )
-            self.dihedral_prior_layer = self._define_normalize_layer(
+            self.dihedral_normalize_layer = self._define_normalize_layer(
                 dihedral_mean, dihedral_std
             )
+        self.net = instantiate(config.models, 
+            input_size=self._get_input_dim_from_num_atom(num_atom))
 
-        self.net = instantiate(config.network)
+    def _get_input_dim_from_num_atom(self, num_atom):
+        input_dim = 0
+        input_dim += num_atom - 1 # length dim
+        input_dim += num_atom - 2 # angle dim
+        input_dim += (num_atom - 3) * 2 # dihedral number
+        return input_dim
 
     def _define_normalize_layer(self, mean, std):
         if mean is None:
@@ -96,14 +103,15 @@ class CGnet(nn.Module):
 
         return NormalizeLayer(mean, std)
 
+    @torch.enable_grad()
     def forward(self, x):
         # x shape is (batch size, number of atom(beads), 3) or
         # (batch size, length of featuers, number of atom(beads), 3)
 
         # cal features
         angle = self.cal_angle_layer(x)
-        length = slef.cal_length_layer(x)
-        dihedral = self.cal_length_layer(x)
+        length = self.cal_length_layer(x)
+        dihedral = self.cal_dihedral_layer(x)
 
         if self.config.is_normalize:
             angle = self.angle_normalize_layer(angle)
@@ -120,7 +128,7 @@ class CGnet(nn.Module):
             energy = energy + self.angle_prior_layer(angle)
         if self.config.is_length_prior:
             energy = energy + self.length_prior_layer(length)
-        if self.config.is_dihedral_pror:
+        if self.config.is_dihedral_prior:
             energy = energy + self.dihedral_prior_layer(dihedral)
 
         force = torch.autograd.grad(-torch.sum(energy),
@@ -128,4 +136,4 @@ class CGnet(nn.Module):
                                     create_graph=True,
                                     retain_graph=True)
 
-        return force, energy
+        return force[0], energy

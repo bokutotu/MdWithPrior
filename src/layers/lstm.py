@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class LSTM(nn.Module):
 
-    def __init__(self, num_layers, dropout, input_size, hidden_size, output_size, ):
+    def __init__(self, num_layers, dropout, input_size, hidden_size, output_size):
         super().__init__()
 
         self.net = nn.LSTM(
