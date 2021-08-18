@@ -109,6 +109,7 @@ class Experiment(pl.LightningModule):
     # run your whole experiments
     def run(self):
         self.fit()
+        self.trainer.test()
 
     def save_output(self):
         coord_npy = np.load(self.config.coordinates_path)

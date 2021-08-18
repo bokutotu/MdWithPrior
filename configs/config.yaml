@@ -6,8 +6,8 @@ defaults:
   - optimizer: adam
   - scheduler: step
   - logger: mlflow
-  - models: lstm
-  - dataset: lstm
+  - models: mlp
+  - dataset: mlp
 
   # enable color logging
   - override hydra/job_logging: default
@@ -17,7 +17,7 @@ defaults:
 experiment_name: default
 gpus: null
 lr: 0.003
-epochs: 30
+epochs: 10
 batch_size: 128
 
 train_test_rate: 0.9
@@ -42,7 +42,7 @@ work_dir: ${hydra:runtime.cwd}
 hydra:
     # output paths for hydra logs
     run:
-        dir: logs/runs/${now:%Y-%m-%d}/${now:%H:%M:%S}/${hydra.job.override_dirname}
+        dir: /tmp/logs/runs/${now:%Y-%m-%d}/${now:%H:%M:%S}/${hydra.job.override_dirname}
     sweep:
         dir: logs/multiruns/${now:%Y-%m-%d}/${now:%H:%M:%S}/
         subdir: ${hydra.job.override_dirname}
