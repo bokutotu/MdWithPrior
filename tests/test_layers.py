@@ -49,19 +49,19 @@ def test_prior_layer():
     loss = torch.nn.MSELoss()
     input = torch.rand((10000, 10))
     def func(x): return true_k * (x - true_r) ** 2
-    first_loss = loss(layer(input), func(input))
+    first_loss = loss(layer(input), torch.sum(func(input), dim=-1).unsqueeze(dim=-1))
 
     for i in range(1000):
         input = torch.rand(10000, 10)
         out = layer(input)
-        batch_loss = loss(out, func(input))
+        batch_loss = loss(out, torch.sum(func(input), dim=-1).unsqueeze(dim=-1))
         batch_loss.backward()
         optim.step()
 
     input = torch.rand(10000, 10)
     output = layer(input)
     ans = func(input)
-    after_train_loss = loss(output, ans)
+    after_train_loss = loss(output, torch.sum(ans, dim=-1).unsqueeze(dim=-1))
 
     if after_train_loss < first_loss:
         assert True
