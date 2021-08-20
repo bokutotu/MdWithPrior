@@ -66,6 +66,6 @@ def test_simulation():
     weight = get_weight_tensor(velocities.size(1))
 
     for idx in range(velocities.size()[0] - 1):
-        cal_next_coord = cal_next_coord_using_pred_forces(
+        cal_next_coord,_ = cal_next_coord_using_pred_forces(
                 coordinates[idx], velocities[idx], forces[idx], weight)
         assert_allclose(coordinates[idx+1].numpy(), cal_next_coord.numpy(),rtol=1e-6)

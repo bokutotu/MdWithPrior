@@ -67,4 +67,4 @@ def cal_next_coord_using_pred_forces(
         duration between steps
     """
     next_velocity = cal_v(velocities, weight, pred_forces, dt=dt)
-    return cal_coord(coordinates, next_velocity, dt)
+    return cal_coord(coordinates, next_velocity, dt), next_velocity
