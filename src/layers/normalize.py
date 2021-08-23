@@ -14,8 +14,8 @@ class NormalizeLayer(torch.nn.Module):
 
     def __init__(self, mean, std):
         super().__init__()
-        self.mean = mean
-        self.std = std
+        self.register_buffer("mean", mean)
+        self.register_buffer("std", std)
 
     def forward(self, x):
         """normalizate
