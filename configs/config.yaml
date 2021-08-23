@@ -2,20 +2,15 @@
 
 # specify here default training configuration
 defaults:
-  - trainer: default
+  - _self_
   - optimizer: adam
   - scheduler: step
-  - logger: mlflow
   - models: mlp
   - dataset: mlp
 
-  # enable color logging
-  - override hydra/job_logging: default
-  - override hydra/hydra_logging: default
-
 # global configurations
 experiment_name: default
-gpus: null
+gpus: 0
 lr: 0.003
 epochs: 10
 batch_size: 128
@@ -29,8 +24,8 @@ is_dihedral_prior: true
 
 is_normalize: true
 
-coordinates_path: /Users/kondouakira/Code/Lab/cgnet/examples/data/ala2_coordinates.npy
-forces_path: /Users/kondouakira/Code/Lab/cgnet/examples/data/ala2_forces.npy
+coordinates_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_coordinates.npy
+forces_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_forces.npy
 
 # path to original working directory (that `run.py` was executed from in command line)
 # hydra hijacks working directory by changing it to the current log directory,
