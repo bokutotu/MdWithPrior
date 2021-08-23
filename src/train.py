@@ -39,7 +39,7 @@ def epoch_step(model, dataloader, loss_func, optimizer, device, is_train=True):
             loss.backward()
             optimizer.step()
 
-        loss_sum += loss 
+        loss_sum += loss
 
     loss = loss_sum / (idx + 1)
     return model, float(loss)
@@ -53,13 +53,14 @@ def train(cfg):
     cfg: DictConfig
     """
     print("set up mlflow experiment")
-    mlflow.set_tracking_uri('file://' + hydra.utils.get_original_cwd() + '/mlruns')
+    mlflow.set_tracking_uri(
+        'file://' + hydra.utils.get_original_cwd() + '/mlruns')
     mlflow.set_experiment(cfg.experiment_name)
 
     with mlflow.start_run() as run:
         print("set up dataloader")
         train_dataloader, val_dataloader, test_dataloader = setup_dataloader(
-            cfg.dataset, cfg.coordinates_path, cfg.forces_path, 
+            cfg.dataset, cfg.coordinates_path, cfg.forces_path,
             cfg.train_test_rate, cfg.batch_size
         )
 
@@ -69,7 +70,9 @@ def train(cfg):
         scheduler = instantiate(cfg.scheduler, optimizer=optimizer)
         loss_func = torch.nn.MSELoss()
 
-        device = torch.device("cuda") if cfg.gpus is not None else torch.device("cpu")
+        device = torch.device(
+            "cuda") if cfg.gpus is not None else torch.device("cpu")
+        model = model.to(device)
 
         train_loss = []
         val_loss = []
@@ -88,20 +91,19 @@ def train(cfg):
                 model, val_dataloader, loss_func, optimizer, device, False
             )
             val_loss.append(loss)
-            print("epoch: {} train: {:.4f}, val: {:.4f}" \
-                .format(i+1,train_loss[-1], val_loss[-1]))
+            print("epoch: {} train: {:.4f}, val: {:.4f}"
+                  .format(i+1, train_loss[-1], val_loss[-1]))
 
             mlflow.log_metrics(
-                    {"train loss": train_loss[-1], "validation loss": val_loss[-1]}, i)
+                {"train loss": train_loss[-1], "validation loss": val_loss[-1]}, i)
 
             mlflow.pytorch.save_model(
-                    model, "/tmp/model/epoch-{}-val-{:.4f}".format(i+1, val_loss[-1]))
+                model, "/tmp/model/epoch-{}-val-{:.4f}".format(i+1, val_loss[-1]))
 
             scheduler.step()
-            
+
             if best_loss < val_loss[-1]:
                 best_model_parameters = model.state_dict()
-
 
         # test use best model
         model.load_state_dict(best_model_parameters)
@@ -111,11 +113,11 @@ def train(cfg):
 
         print("test loss {:.4f}".format(loss))
 
-
         # save best model to mlruns dir
         sorted_arg = np.argsort(val_loss).tolist()
         best_model_idx = sorted_arg[0]
-        best_model_path = "/tmp/model/epoch-{}-val-{:.4f}".format(best_model_idx+1, val_loss[best_model_idx])
+        best_model_path = "/tmp/model/epoch-{}-val-{:.4f}".format(
+            best_model_idx+1, val_loss[best_model_idx])
         save_dir = run.info.artifact_uri[7:-1:] + "/model/"
         shutil.copytree(best_model_path, save_dir)
 
@@ -124,5 +126,3 @@ def train(cfg):
         OmegaConf.save(cfg, save_name)
 
         mlflow.log_metric("test loss", loss)
-
-
