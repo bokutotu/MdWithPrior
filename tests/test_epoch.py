@@ -5,7 +5,7 @@ from omegaconf import OmegaConf
 import numpy as np
 
 from src.model import CGnet
-from src.data_module import LSTMDataset
+from src.dataset import LSTMDataset
 
 
 def test_epoch():
