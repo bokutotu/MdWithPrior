@@ -1,4 +1,5 @@
-# from logging import config
+from urllib.parse import urlparse
+
 import torch
 import hydra
 from hydra.utils import instantiate
@@ -80,6 +81,8 @@ def train(cfg):
         best_model_parameters = None
         best_loss = 1e-10
 
+        parameters_list = []
+
         for i in range(cfg.epochs):
             # train
             model, loss = epoch_step(
@@ -97,11 +100,9 @@ def train(cfg):
             mlflow.log_metrics(
                 {"train loss": train_loss[-1], "validation loss": val_loss[-1]}, i)
 
-            mlflow.pytorch.save_model(
-                model, "/tmp/model/epoch-{}-val-{:.4f}".format(i+1, val_loss[-1]))
-
             scheduler.step()
 
+            # Keep the parameters of the model with the best validation value.
             if best_loss < val_loss[-1]:
                 best_model_parameters = model.state_dict()
 
@@ -113,16 +114,16 @@ def train(cfg):
 
         print("test loss {:.4f}".format(loss))
 
+        # save best model to artifact dir
+        uri = run.info.artifact_uri
+        path = urlparse(uri).path
+        torch.save(best_model_parameters, path + "/model.pth")
+
         # save best model to mlruns dir
         sorted_arg = np.argsort(val_loss).tolist()
         best_model_idx = sorted_arg[0]
-        best_model_path = "/tmp/model/epoch-{}-val-{:.4f}".format(
-            best_model_idx+1, val_loss[best_model_idx])
-        save_dir = run.info.artifact_uri[7:-1:] + "/model/"
-        shutil.copytree(best_model_path, save_dir)
 
         # save config to mlruns dir
-        save_name = run.info.artifact_uri[7:-1:] + "/config.yaml"
-        OmegaConf.save(cfg, save_name)
+        OmegaConf.save(cfg, path + "/config.yaml")
 
         mlflow.log_metric("test loss", loss)
