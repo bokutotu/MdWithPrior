@@ -12,7 +12,7 @@ from src.setup import setup_dataloader, setup_model
 
 
 def epoch_step(model, dataloader, loss_func, optimizer, device, is_train=True):
-    """1 epoch step 
+    """1 epoch step
 
     Parameters
     ---------
@@ -64,12 +64,14 @@ def train(cfg):
             cfg.dataset, cfg.coordinates_path, cfg.forces_path,
             cfg.train_test_rate, cfg.batch_size
         )
+        print("len trian dataloader is {}".format(len((train_dataloader))))
 
         print("set up model")
         model = setup_model(cfg)
         optimizer = instantiate(cfg.optimizer, params=model.parameters(), )
         scheduler = instantiate(cfg.scheduler, optimizer=optimizer)
         loss_func = torch.nn.MSELoss()
+        print(model)
 
         device = torch.device(
             "cuda") if cfg.gpus is not None else torch.device("cpu")
@@ -109,8 +111,7 @@ def train(cfg):
         # test use best model
         model.load_state_dict(best_model_parameters)
         _, loss = epoch_step(
-            model, test_dataloader, loss_func, optimizer, device, False
-        )
+            model, test_dataloader, loss_func, optimizer, device, False)
 
         print("test loss {:.4f}".format(loss))
 
