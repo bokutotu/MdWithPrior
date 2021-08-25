@@ -1,3 +1,5 @@
+import sys
+
 import torch
 
 
@@ -26,7 +28,7 @@ class AngleLayer(torch.nn.Module):
         tmp_b = torch.norm(after_vec - basic_vec, p=2, dim=-1)
         norm_product = tmp_a * tmp_b
 
-        cos_tensor = inner_product / norm_product
+        cos_tensor = inner_product / (norm_product + sys.float_info.epsilon)
         return cos_tensor
 
     def forward(self, coordinates):

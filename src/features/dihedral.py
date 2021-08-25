@@ -1,3 +1,5 @@
+import sys
+
 import torch
 
 
@@ -14,23 +16,6 @@ def dot(a, b):
     if a.size() != b.size():
         raise ValueError("input tensor shape is not same")
     return torch.sum(a * b, dim=-1).unsqueeze(dim=-1)
-
-
-def outer(a, b):
-    """calulate cross(outer) prodcut for 3-D tensor"""
-
-    if a.size() != b.size():
-        raise ValueError("input tensor shape is not same")
-
-    # out = torch.zeros_like(a, requires_grad=True)
-    # out[::, ::, 0] = a[::, ::, 1] * b[::, ::, 2] - a[::, ::, 2] * b[::, ::, 1]
-    # out[::, ::, 1] = a[::, ::, 2] * b[::, ::, 0] - a[::, ::, 0] * b[::, ::, 2]
-    # out[::, ::, 2] = a[::, ::, 0] * b[::, ::, 1] - a[::, ::, 1] * b[::, ::, 0]
-    # print(out.size())
-
-
-
-    return out
 
 
 class DihedralLayer(torch.nn.Module):
@@ -62,7 +47,7 @@ class DihedralLayer(torch.nn.Module):
 
         # normalize b1 so that it does not influence magnitude of vector
         # rejections that come next
-        b1 = b1 / torch.linalg.norm(b1, )
+        b1 = b1 / (torch.linalg.norm(b1, ) + sys.float_info.epsilon)
 
         # vector rejections
         # v = projection of b0 onto plane perpendicular to b1
