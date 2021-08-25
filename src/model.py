@@ -103,7 +103,6 @@ class CGnet(nn.Module):
 
         return NormalizeLayer(mean, std)
 
-    @torch.enable_grad()
     def forward(self, x):
         # x shape is (batch size, number of atom(beads), 3) or
         # (batch size, length of featuers, number of atom(beads), 3)
@@ -119,6 +118,7 @@ class CGnet(nn.Module):
             dihedral = self.dihedral_normalize_layer(dihedral)
 
         net_input = torch.cat([angle, length, dihedral], dim=-1)
+
         energy = self.net(net_input)
         # output shape is
         # (batch size, 1) or
