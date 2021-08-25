@@ -3,7 +3,7 @@ import torch
 MASS = {'CA': 12.011, 'CB': 12.011, 'C': 12.011, 'O': 15.999, 'N': 14.007}
 
 
-def cal_coord(coordinates, velocity, dt=0.002): 
+def cal_coord(coordinates, velocity, dt=0.002):
     """Calculate coordinates using Leap Frog methods
 
     Parameters
@@ -35,7 +35,6 @@ def cal_v(v_2, m, f, dt=0.002):
     f : numpy.array or torch.tesor
         原子にかかる力
     """
-    # assert v_2.size() == m.size() == f.size()
     return v_2 + f * dt / m
 
 

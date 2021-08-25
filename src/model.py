@@ -79,14 +79,14 @@ class CGnet(nn.Module):
             self.dihedral_normalize_layer = self._define_normalize_layer(
                 dihedral_mean, dihedral_std
             )
-        self.net = instantiate(config.models, 
-            input_size=self._get_input_dim_from_num_atom(num_atom))
+        self.net = instantiate(config.models,
+                               input_size=self._get_input_dim_from_num_atom(num_atom))
 
     def _get_input_dim_from_num_atom(self, num_atom):
         input_dim = 0
-        input_dim += num_atom - 1 # length dim
-        input_dim += num_atom - 2 # angle dim
-        input_dim += (num_atom - 3) * 2 # dihedral number
+        input_dim += num_atom - 1  # length dim
+        input_dim += num_atom - 2  # angle dim
+        input_dim += (num_atom - 3) * 2  # dihedral number
         return input_dim
 
     def _define_normalize_layer(self, mean, std):

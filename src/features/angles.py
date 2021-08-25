@@ -48,8 +48,8 @@ class AngleLayer(torch.nn.Module):
         elif len(size) == 4:
             return self._cal_angles(
                 coordinates.view(size[0] * size[1], size[2], size[3]))\
-                    .view(size[0], size[1], size[2]-2)
+                .view(size[0], size[1], size[2]-2)
         else:
             ValueError(
-                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}" \
-                    .format(len(size)))
+                "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}"
+                .format(len(size)))
