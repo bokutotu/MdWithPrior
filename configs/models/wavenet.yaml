@@ -1,0 +1,8 @@
+# @package models
+
+_target_: src.layers.wavenet.WaveNet
+
+block_layers: 6
+block_num: 2
+hidden_dim: 64
+out_dim: 1
