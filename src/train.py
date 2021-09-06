@@ -40,7 +40,7 @@ def epoch_step(model, dataloader, loss_func, optimizer, device, is_train=True):
             loss.backward()
             optimizer.step()
 
-        loss_sum += loss
+        loss_sum += loss.detach().cpu()
 
     loss = loss_sum / (idx + 1)
     return model, float(loss)
@@ -85,6 +85,7 @@ def train(cfg):
 
         parameters_list = []
 
+        print("start train")
         for i in range(cfg.epochs):
             # train
             model, loss = epoch_step(
