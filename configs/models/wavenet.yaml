@@ -2,7 +2,8 @@
 
 _target_: src.layers.wavenet.WaveNet
 
-block_layers: 6
+block_layers: 5
 block_num: 2
-hidden_dim: 64
+hidden_dim: 128
 out_dim: 1
+activate_func: ReLU
