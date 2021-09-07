@@ -9,16 +9,16 @@ def cal_coord(coordinates, velocity, dt=0.002):
     Parameters
     ----------
     coordinates: torch.tensor
-        1 step before coordinates this tensor dimention is 
+        1 step before coordinates this tensor dimention is
         (number of atoms or beads, 3 (x,y,z))
     velocity: torch.tensor
-        half step before velocities.this tensor's dimention is 
+        half step before velocities.this tensor's dimention is
         (number of atoms or beads, 3(x,y,z))
     dt: float
         step time
     """
-    if coordinates.size() != velocity.size():
-        raise ValueError("coordinates shape and velocities shape must be same")
+    # if coordinates.size() != velocity.size():
+    #     raise ValueError("coordinates shape and velocities shape must be same")
     return coordinates + dt * velocity
 
 
@@ -49,7 +49,7 @@ def get_weight_tensor(atom_num):
 
 def cal_next_coord_using_pred_forces(
         coordinates, velocities, pred_forces, weight, dt=0.002):
-    """Use the force obtained from the coordinates to calculate the coordinates 
+    """Use the force obtained from the coordinates to calculate the coordinates
     of the next step from the velocity and the current coordinates.
 
     Parameters
@@ -65,5 +65,5 @@ def cal_next_coord_using_pred_forces(
     dt: float
         duration between steps
     """
-    next_velocity = cal_v(velocities, weight, pred_forces, dt=dt)
+    next_velocity = cal_v(velocities, weight, pred_forces, dt)
     return cal_coord(coordinates, next_velocity, dt), next_velocity

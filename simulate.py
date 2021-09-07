@@ -49,11 +49,12 @@ def simulate(
 
     print("  start simulation  ")
     for step in range(step):
+        print("step number {}".format(step + 1))
         if mode == "MLP":
             result_coordinates, result_velocities, model = \
                 simulate_step_mlp(
                     result_coordinates, result_velocities, model,
-                    weight, step, args.dt)
+                    weight, step, float(args.dt))
         elif mode == "LSTM":
             result_coordinates, result_velocities, model = \
                 simulate_step_lstm(
