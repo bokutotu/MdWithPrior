@@ -1,9 +1,13 @@
 import hydra
 from omegaconf import DictConfig
 from mlflow.pytorch import save_model
+from src.train import train
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 
 # from src.experiment import Experiment
-from src.train import train
 
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
