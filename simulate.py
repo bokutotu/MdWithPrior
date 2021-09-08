@@ -55,7 +55,7 @@ def simulate(
                 simulate_step_mlp(
                     result_coordinates, result_velocities, model,
                     weight, step, float(args.dt))
-        elif mode == "LSTM":
+        else:
             result_coordinates, result_velocities, model = \
                 simulate_step_lstm(
                     result_coordinates, result_velocities,
