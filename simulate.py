@@ -59,7 +59,7 @@ def simulate(
             result_coordinates, result_velocities, model = \
                 simulate_step_lstm(
                     result_coordinates, result_velocities,
-                    model, weight, step, feature_len)
+                    model, weight, step, feature_len, float(dt))
 
     if mode == "MLP":
         result_coordinates = result_coordinates[1:-1:]
