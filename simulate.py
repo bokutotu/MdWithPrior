@@ -63,7 +63,7 @@ def simulate(
 
     if mode == "MLP":
         result_coordinates = result_coordinates[1:-1:]
-    elif mode == "LSTM":
+    else:
         result_coordinates = result_coordinates[feature_len:-1:]
 
     np.save(save_name, result_coordinates.detach().cpu().numpy())
