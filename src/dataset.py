@@ -16,8 +16,8 @@ class MLPDataset(Dataset):
 
     def __getitem__(self, idx):
         return (
-            torch.tensor(self.coordinates[idx], requires_grad=True),
-            torch.tensor(self.forces[idx], requires_grad=True)
+            self.coordinates[idx],
+            self.forces[idx]
         )
 
 

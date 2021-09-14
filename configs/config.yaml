@@ -7,25 +7,29 @@ defaults:
   - scheduler: step
   - models: mlp
   - dataset: mlp
+  - logger: mlflow
+  - trainer: default
 
 # global configurations
 experiment_name: default
-gpus: 0
+gpus: [0]
 lr: 0.003
-epochs: 10
-batch_size: 128
+epochs: 50
+batch_size: 64
 
-train_test_rate: 0.9
+train_test_rate: 0.75
 
 # for CGnet
 is_angle_prior: true
 is_length_prior: true
 is_dihedral_prior: true
 
-is_normalize: true
+is_normalize: false
 
-coordinates_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_coordinates.npy
-forces_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_forces.npy
+# coordinates_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_coordinates.npy
+# forces_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_forces.npy
+coordinates_path: /home/bokutotu/HDD/Lab/data/NPY/c_trj.npy
+forces_path: /home/bokutotu/HDD/Lab/data/NPY/f_trj.npy
 
 # path to original working directory (that `run.py` was executed from in command line)
 # hydra hijacks working directory by changing it to the current log directory,
