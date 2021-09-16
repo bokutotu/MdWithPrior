@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+# from torch.utils.data.distributed import DistributedSampler
 from torch import optim
 
 from hydra.utils import instantiate
@@ -11,11 +12,11 @@ from src.statics import get_statics
 
 
 def setup_dataloader(cfg, coordinates_path, forces_path,
-        train_test_rate, batch_size):
+                     train_test_rate, batch_size):
     """Set up dataloader
     Split the data from the npy file given by cfg with train, validation, 
     and test, and create and return a data loader for each.
-    
+
     Parameters
     ----------
     cfg: OmegaConf
@@ -48,11 +49,12 @@ def setup_dataloader(cfg, coordinates_path, forces_path,
     test_coord = coordinates[val_last_idx:-1]
     test_force = forces[val_last_idx: -1]
 
-    train_dataset = instantiate(cfg, coordinates=train_coord, forces=train_force)
+    train_dataset = instantiate(
+        cfg, coordinates=train_coord, forces=train_force)
     val_dataset = instantiate(cfg, coordinates=val_coord, forces=val_force)
     test_dataset = instantiate(cfg, coordinates=test_coord, forces=test_force)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, )
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
@@ -90,5 +92,3 @@ def setup_model(cfg):
         length_mean=stat["length"]["mean"],
         length_std=stat["length"]["std"])
     return net
-
-
