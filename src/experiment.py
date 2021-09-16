@@ -1,3 +1,6 @@
+import os
+from urllib.parse import urlparse
+
 import torch
 from torch import Tensor
 from torch.optim import Optimizer
@@ -9,6 +12,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 import numpy as np
+import mlflow
 
 from src.statics import get_statics
 from src.data_module import DataModule
@@ -46,6 +50,9 @@ class Experiment(pl.LightningModule):
                            length_mean=stat["length"]["mean"],
                            length_std=stat["length"]["std"])
 
+        self.val_loss = 1e-20
+        self.best_model_state_dict = self.model.state_dict()
+
         del coordinates
 
     def configure_optimizers(self):
@@ -56,15 +63,16 @@ class Experiment(pl.LightningModule):
         return [optimizer], [scheduler]
 
     def loss_fn(self, output, ans):
-        # loss = F.mse_loss(output, ans)
-        loss = ForceLoss()(output, ans)
+        loss = F.mse_loss(output, ans)
         return loss
 
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
         input, ans = batch
-        input = torch.tensor(input, requires_grad=True, dtype=torch.float32)
-        ans = torch.tensor(ans, requires_grad=True, dtype=torch.float32)
+        input = torch.tensor(input, dtype=torch.float32,
+                             requires_grad=True, device=torch.device("cuda"))
+        ans = torch.tensor(ans, dtype=torch.float32,
+                           requires_grad=True, device=torch.device("cuda"))
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
         self.log("train_loss", loss)
@@ -73,18 +81,26 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         input, ans = batch
-        input = torch.tensor(input.cpu().numpy(), requires_grad=True)
-        ans = torch.tensor(ans.cpu().numpy(), requires_grad=True)
+        input = torch.tensor(input, dtype=torch.float32,
+                             requires_grad=True, device=torch.device("cuda"))
+        ans = torch.tensor(ans, dtype=torch.float32,
+                           requires_grad=True, device=torch.device("cuda"))
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
         self.log("val_loss", loss)
+        loss = loss.detach().cpu()
+        if loss <= self.val_loss:
+            self.val_loss = loss
+            self.best_model_state_dict = self.model.state_dict()
         return loss
 
     @torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
         input, ans = batch
-        input = torch.tensor(input.cpu().numpy(), requires_grad=True)
-        ans = torch.tensor(ans.cpu().numpy(), requires_grad=True)
+        input = torch.tensor(input, dtype=torch.float32,
+                             requires_grad=True, device=torch.device("cuda"))
+        ans = torch.tensor(ans, dtype=torch.float32,
+                           requires_grad=True, device=torch.device("cuda"))
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
         self.log("test_loss", loss)
@@ -106,15 +122,12 @@ class Experiment(pl.LightningModule):
 
     # run your whole experiments
     def run(self):
+        artifact_path = urlparse(self.logger._tracking_uri).path
+        artifact_path = os.path.join(
+            artifact_path, self.logger.experiment_id, self.logger.run_id, "artifacts")
         self.fit()
         self.trainer.test()
-
-    def save_output(self):
-        coord_npy = np.load(self.config.coordinates_path)
-        coord_tensor = torch.tensor(coord_npy, requires_grad=True)
-        output_tensor, _ = self.model(coord_tensor)
-        output_npy = output_tensor.detach().numpy()
-        np.save("/tmp/my_impl.npy", output_npy)
+        torch.save(self.best_model_state_dict, artifact_path + "/model.pth")
 
     def log_artifact(self, artifact_path: str):
         self.logger.experiment.log_artifact(self.logger.run_id, artifact_path)
