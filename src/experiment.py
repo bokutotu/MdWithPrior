@@ -14,8 +14,6 @@ from src.statics import get_statics
 from src.data_module import DataModule
 from src.model import CGnet
 
-from cgnet.network import ForceLoss
-
 
 class Experiment(pl.LightningModule):
     def __init__(self, config, ):
@@ -37,7 +35,7 @@ class Experiment(pl.LightningModule):
         self.data_module = DataModule(
             config.batch_size, config.coordinates_path, config.forces_path,
             config.train_test_rate, config.dataset)
-        
+
         num_atom = coordinates.shape[1]
 
         self.model = CGnet(config=config, num_atom=num_atom,
@@ -71,7 +69,7 @@ class Experiment(pl.LightningModule):
         loss = self.loss_fn(force, ans)
         self.log("train_loss", loss)
         return loss
-    
+
     @torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         input, ans = batch

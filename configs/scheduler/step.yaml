@@ -8,4 +8,4 @@ step_size: 30
 
 gamma: 0.3
 last_epoch: -1
-verbose: True
+verbose: False
