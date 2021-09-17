@@ -56,12 +56,9 @@ def setup_dataloader(cfg, coordinates_path, forces_path,
     val_dataset = instantiate(cfg, coordinates=val_coord, forces=val_force)
     test_dataset = instantiate(cfg, coordinates=test_coord, forces=test_force)
 
-    train_dataloader = DataLoader(
-        train_dataset, batch_size=batch_size, num_workers=multiprocessing.cpu_count())
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size,
-                                num_workers=multiprocessing.cpu_count())
-    test_dataloader = DataLoader(
-        test_dataset, batch_size=batch_size, num_workers=multiprocessing.cpu_count())
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size,)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
     return train_dataloader, val_dataloader, test_dataloader
 
