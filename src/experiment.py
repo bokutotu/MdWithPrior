@@ -71,10 +71,8 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
         input, ans = batch
-        input = torch.tensor(input, dtype=self.tensor_dtype,
-                             requires_grad=True, device=torch.device("cuda"))
-        ans = torch.tensor(ans, dtype=self.tensor_dtype,
-                           requires_grad=True, device=torch.device("cuda"))
+        input = input.requires_grad_(True)
+        ans = ans.requires_grad_(True)
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
         self.log("train_loss", loss)
@@ -83,10 +81,8 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         input, ans = batch
-        input = torch.tensor(input, dtype=self.tensor_dtype,
-                             requires_grad=True, device=torch.device("cuda"))
-        ans = torch.tensor(ans, dtype=self.tensor_dtype,
-                           requires_grad=True, device=torch.device("cuda"))
+        input = input.requires_grad_(True)
+        ans = ans.requires_grad_(True)
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
         self.log("val_loss", loss)
@@ -99,10 +95,8 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
         input, ans = batch
-        input = torch.tensor(input, dtype=self.tensor_dtype,
-                             requires_grad=True, device=torch.device("cuda"))
-        ans = torch.tensor(ans, dtype=self.tensor_dtype,
-                           requires_grad=True, device=torch.device("cuda"))
+        input = input.requires_grad_(True)
+        ans = ans.requires_grad_(True)
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
         self.log("test_loss", loss)
