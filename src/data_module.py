@@ -1,4 +1,5 @@
 import os
+import multiprocessing
 from typing import Optional
 
 import numpy as np
@@ -9,6 +10,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import RandomSampler
 
 from src.dataset import MLPDataset, LSTMDataset
+
 
 class DataModule(pl.LightningDataModule):
     def __init__(self, batch_size, coordinates_path,
@@ -54,21 +56,24 @@ class DataModule(pl.LightningDataModule):
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
-            sampler=RandomSampler(self.train)
+            sampler=RandomSampler(self.train),
+            num_workers=multiprocessing.cpu_count()
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             self.val,
             batch_size=self.batch_size,
-            sampler=RandomSampler(self.val)
+            sampler=RandomSampler(self.val),
+            num_workers=multiprocessing.cpu_count(),
         )
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
             self.test,
             batch_size=self.batch_size,
-            sampler=RandomSampler(self.test)
+            sampler=RandomSampler(self.test),
+            num_workers=multiprocessing.cpu_count(),
         )
 
     def teardown(self, stage: Optional[str] = None):

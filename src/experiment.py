@@ -53,6 +53,8 @@ class Experiment(pl.LightningModule):
         self.val_loss = 1e-20
         self.best_model_state_dict = self.model.state_dict()
 
+        self.tensor_dtype = torch.float32 if config.trainer.precision == 32 else torch.float16
+
         del coordinates
 
     def configure_optimizers(self):
@@ -69,9 +71,9 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
         input, ans = batch
-        input = torch.tensor(input, dtype=torch.float32,
+        input = torch.tensor(input, dtype=self.tensor_dtype,
                              requires_grad=True, device=torch.device("cuda"))
-        ans = torch.tensor(ans, dtype=torch.float32,
+        ans = torch.tensor(ans, dtype=self.tensor_dtype,
                            requires_grad=True, device=torch.device("cuda"))
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
@@ -81,9 +83,9 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         input, ans = batch
-        input = torch.tensor(input, dtype=torch.float32,
+        input = torch.tensor(input, dtype=self.tensor_dtype,
                              requires_grad=True, device=torch.device("cuda"))
-        ans = torch.tensor(ans, dtype=torch.float32,
+        ans = torch.tensor(ans, dtype=self.tensor_dtype,
                            requires_grad=True, device=torch.device("cuda"))
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
@@ -97,9 +99,9 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
         input, ans = batch
-        input = torch.tensor(input, dtype=torch.float32,
+        input = torch.tensor(input, dtype=self.tensor_dtype,
                              requires_grad=True, device=torch.device("cuda"))
-        ans = torch.tensor(ans, dtype=torch.float32,
+        ans = torch.tensor(ans, dtype=self.tensor_dtype,
                            requires_grad=True, device=torch.device("cuda"))
         force, energy = self.model(input)
         loss = self.loss_fn(force, ans)
