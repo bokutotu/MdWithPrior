@@ -1,3 +1,5 @@
+import multiprocessing
+
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -14,14 +16,14 @@ from src.statics import get_statics
 def setup_dataloader(cfg, coordinates_path, forces_path,
                      train_test_rate, batch_size):
     """Set up dataloader
-    Split the data from the npy file given by cfg with train, validation, 
+    Split the data from the npy file given by cfg with train, validation,
     and test, and create and return a data loader for each.
 
     Parameters
     ----------
     cfg: OmegaConf
         cfg about dataset
-        cfg.dataset 
+        cfg.dataset
     coordinates_path: str
         path to coordinates npy file
     forces_path: str
@@ -54,9 +56,12 @@ def setup_dataloader(cfg, coordinates_path, forces_path,
     val_dataset = instantiate(cfg, coordinates=val_coord, forces=val_force)
     test_dataset = instantiate(cfg, coordinates=test_coord, forces=test_force)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, )
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
+    train_dataloader = DataLoader(
+        train_dataset, batch_size=batch_size, num_workers=multiprocessing.cpu_count())
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size,
+                                num_workers=multiprocessing.cpu_count())
+    test_dataloader = DataLoader(
+        test_dataset, batch_size=batch_size, num_workers=multiprocessing.cpu_count())
 
     return train_dataloader, val_dataloader, test_dataloader
 
@@ -71,7 +76,7 @@ def setup_model(cfg):
     coordinates_path: str
         path string for coordinates npy file
     forces_path: str
-        path string for forces npy file 
+        path string for forces npy file
 
     Returns
     -------
