@@ -66,6 +66,7 @@ class DataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=RandomSampler(self.val),
             # num_workers=multiprocessing.cpu_count(),
+            shuffle=False
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -74,6 +75,7 @@ class DataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=RandomSampler(self.test),
             # num_workers=multiprocessing.cpu_count(),
+            shuffle=False
         )
 
     def teardown(self, stage: Optional[str] = None):
