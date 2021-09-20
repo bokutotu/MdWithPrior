@@ -67,7 +67,6 @@ class Experiment(pl.LightningModule):
         x, y = batch
         x = x.requires_grad_(True)
         y = x.requires_grad_(True)
-        optimizer.zero_grad()
         out, _ = model(x)
         loss = loss_func(out, y)
         return loss
@@ -83,7 +82,6 @@ class Experiment(pl.LightningModule):
         x, y = batch
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
-        optimizer.zero_grad()
         out, _ = model(x)
         loss = loss_func(out, y)
         return loss
@@ -103,7 +101,6 @@ class Experiment(pl.LightningModule):
         x, y = batch
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
-        optimizer.zero_grad()
         out, _ = model(x)
         loss = loss_func(out, y)
         return loss
