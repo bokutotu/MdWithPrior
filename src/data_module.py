@@ -17,6 +17,19 @@ class DataModule(pl.LightningDataModule):
                  forces_path, train_test_rate, config):
         super().__init__()
 
+#         coordinates = np.load(coordinates_path)
+#         forces = np.load(forces_path)
+#         len_coord = len(coordinates)
+
+#         train_last_idx = int(pow(train_test_rate, 2) * len_coord)
+#         val_last_idx = int(train_test_rate * len_coord)
+
+#         self.train_coord = coordinates[0:train_last_idx]
+#         self.train_force = forces[0: train_last_idx]
+#         self.val_coord = coordinates[train_last_idx: val_last_idx]
+#         self.val_force = forces[train_last_idx: val_last_idx]
+#         self.test_coord = coordinates[val_last_idx:-1]
+#         self.test_force = forces[val_last_idx: -1]
         coordinates = np.load(coordinates_path)
         forces = np.load(forces_path)
         len_coord = len(coordinates)
@@ -56,7 +69,7 @@ class DataModule(pl.LightningDataModule):
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
-            sampler=RandomSampler(self.train),
+            # sampler=RandomSampler(self.train),
             # num_workers=multiprocessing.cpu_count()
         )
 
@@ -64,7 +77,7 @@ class DataModule(pl.LightningDataModule):
         return DataLoader(
             self.val,
             batch_size=self.batch_size,
-            sampler=RandomSampler(self.val),
+            # sampler=RandomSampler(self.val),
             # num_workers=multiprocessing.cpu_count(),
             shuffle=False
         )
@@ -73,7 +86,7 @@ class DataModule(pl.LightningDataModule):
         return DataLoader(
             self.test,
             batch_size=self.batch_size,
-            sampler=RandomSampler(self.test),
+            # sampler=RandomSampler(self.test),
             # num_workers=multiprocessing.cpu_count(),
             shuffle=False
         )
