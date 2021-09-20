@@ -1,5 +1,6 @@
 import os
 from urllib.parse import urlparse
+import functools
 
 import torch
 from torch import Tensor
@@ -16,6 +17,7 @@ import mlflow
 
 from src.statics import get_statics
 from src.data_module import DataModule
+from src.setup import setup_model, setup_dataloader
 from src.model import CGnet
 
 
@@ -32,30 +34,22 @@ class Experiment(pl.LightningModule):
             ],
         )
 
-        coordinates = np.load(config.coordinates_path)
-        coordinates = torch.tensor(coordinates)
-        stat = get_statics(coordinates)
+        self.model = setup_model(config)
 
         self.data_module = DataModule(
             config.batch_size, config.coordinates_path, config.forces_path,
             config.train_test_rate, config.dataset)
 
-        num_atom = coordinates.shape[1]
+        self.loss_fn = torch.nn.MSELoss()
 
-        self.model = CGnet(config=config, num_atom=num_atom,
-                           angle_mean=stat["angle"]["mean"],
-                           angle_std=stat["angle"]["std"],
-                           dihedral_mean=stat["dihedral"]["mean"],
-                           dihedral_std=stat["dihedral"]["std"],
-                           length_mean=stat["length"]["mean"],
-                           length_std=stat["length"]["std"])
+        print(self.model)
 
         self.val_loss = 1e-20
         self.best_model_state_dict = self.model.state_dict()
 
         self.tensor_dtype = torch.float32 if config.trainer.precision == 32 else torch.float16
 
-        del coordinates
+        # del coordinates
 
     def configure_optimizers(self):
         params = self.model.parameters()
@@ -64,42 +58,54 @@ class Experiment(pl.LightningModule):
         scheduler = instantiate(self.config.scheduler, optimizer=optimizer)
         return [optimizer], [scheduler]
 
-    def loss_fn(self, output, ans):
-        loss = F.mse_loss(output, ans)
-        return loss
+    # def loss_fn(self, output, ans):
+    #     loss = F.mse_loss(output, ans)
+    #     return loss
 
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
-        input, ans = batch
-        input = input.requires_grad_(True)
-        ans = ans.requires_grad_(True)
-        force, energy = self.model(input)
-        loss = self.loss_fn(force, ans)
-        self.log("train_loss", loss)
+        x, y = batch
+        x = x.requires_grad_(True)
+        y = x.requires_grad_(True)
+        optimizer.zero_grad()
+        out, _ = model(x)
+        loss = loss_func(out, y)
         return loss
+
+    def training_epoch_end(self, loss):
+        loss = [float(item["loss"].detach().cpu()) for item in loss]
+        loss_sum = functools.reduce(lambda a, b: a + b, loss)
+        loss_avg = loss_sum / len(loss)
+        self.log("train_loss", loss_avg)
 
     @torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
-        input, ans = batch
-        input = input.requires_grad_(True)
-        ans = ans.requires_grad_(True)
-        force, energy = self.model(input)
-        loss = self.loss_fn(force, ans)
-        self.log("val_loss", loss)
-        loss = loss.detach().cpu()
-        if loss <= self.val_loss:
-            self.val_loss = loss
-            self.best_model_state_dict = self.model.state_dict()
+        x, y = batch
+        x = x.requires_grad_(True)
+        y = y.requires_grad_(True)
+        optimizer.zero_grad()
+        out, _ = model(x)
+        loss = loss_func(out, y)
         return loss
+
+    def validation_epoch_end(self, loss):
+        loss = [float(i.detach().cpu()) for i in loss]
+        loss_sum = functools.reduce(lambda a, b: a + b, loss)
+        loss_avg = loss_sum / len(loss)
+
+        if loss_avg <= self.val_loss:
+            self.val_loss = loss_avg
+            self.best_model_state_dict = self.model.state_dict()
+        self.log("validation_loss", loss_avg)
 
     @torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
-        input, ans = batch
-        input = input.requires_grad_(True)
-        ans = ans.requires_grad_(True)
-        force, energy = self.model(input)
-        loss = self.loss_fn(force, ans)
-        self.log("test_loss", loss)
+        x, y = batch
+        x = x.requires_grad_(True)
+        y = y.requires_grad_(True)
+        optimizer.zero_grad()
+        out, _ = model(x)
+        loss = loss_func(out, y)
         return loss
 
     # train your model
