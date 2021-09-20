@@ -31,7 +31,7 @@ def epoch_step(model, dataloader, loss_func, optimizer, device, is_train=True):
     for (idx, batch) in enumerate(dataloader):
         x, y = batch
         x = x.to(device).requires_grad_(True)
-        y = x.to(device).requires_grad_(True)
+        y = y.to(device).requires_grad_(True)
         optimizer.zero_grad()
         out, _ = model(x)
         loss = loss_func(out, y)
@@ -40,10 +40,10 @@ def epoch_step(model, dataloader, loss_func, optimizer, device, is_train=True):
             loss.backward()
             optimizer.step()
 
-        loss_sum += loss.detach().cpu()
+        loss_sum += float(loss.detach().cpu())
 
-    loss = loss_sum / (idx + 1)
-    return model, float(loss)
+    loss = loss_sum / len(dataloader)
+    return model, loss
 
 
 def train(cfg):
