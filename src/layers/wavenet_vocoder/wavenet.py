@@ -213,6 +213,7 @@ class WaveNet(nn.Module):
 
         # x = F.softmax(x, dim=1) if softmax else x
 
+        x = torch.transpose(x, 1, 2)
         return x
 
     def incremental_forward(self, initial_input=None, c=None, g=None,
