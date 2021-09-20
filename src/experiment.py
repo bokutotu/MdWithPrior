@@ -40,7 +40,7 @@ class Experiment(pl.LightningModule):
             config.batch_size, config.coordinates_path, config.forces_path,
             config.train_test_rate, config.dataset)
 
-        self.loss_fn = torch.nn.MSELoss()
+        self.loss_func = torch.nn.MSELoss()
 
         print(self.model)
 
@@ -67,8 +67,8 @@ class Experiment(pl.LightningModule):
         x, y = batch
         x = x.requires_grad_(True)
         y = x.requires_grad_(True)
-        out, _ = model(x)
-        loss = loss_func(out, y)
+        out, _ = self.model(x)
+        loss = self.loss_func(out, y)
         return loss
 
     def training_epoch_end(self, loss):
@@ -82,8 +82,8 @@ class Experiment(pl.LightningModule):
         x, y = batch
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
-        out, _ = model(x)
-        loss = loss_func(out, y)
+        out, _ = self.model(x)
+        loss = self.loss_func(out, y)
         return loss
 
     def validation_epoch_end(self, loss):
@@ -101,8 +101,8 @@ class Experiment(pl.LightningModule):
         x, y = batch
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
-        out, _ = model(x)
-        loss = loss_func(out, y)
+        out, _ = self.model(x)
+        loss = self.loss_func(out, y)
         return loss
 
     # train your model
