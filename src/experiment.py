@@ -66,7 +66,7 @@ class Experiment(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         x = x.requires_grad_(True)
-        y = x.requires_grad_(True)
+        y = y.requires_grad_(True)
         out, _ = self.model(x)
         loss = self.loss_func(out, y)
         return loss
