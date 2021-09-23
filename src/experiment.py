@@ -49,18 +49,12 @@ class Experiment(pl.LightningModule):
 
         self.tensor_dtype = torch.float32 if config.trainer.precision == 32 else torch.float16
 
-        # del coordinates
-
     def configure_optimizers(self):
         params = self.model.parameters()
         optimizer: Optimizer = instantiate(
             self.config.optimizer, params=params)
         scheduler = instantiate(self.config.scheduler, optimizer=optimizer)
         return [optimizer], [scheduler]
-
-    # def loss_fn(self, output, ans):
-    #     loss = F.mse_loss(output, ans)
-    #     return loss
 
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
@@ -72,12 +66,11 @@ class Experiment(pl.LightningModule):
         return loss
 
     def training_epoch_end(self, loss):
-        loss = [float(item["loss"].detach().cpu()) for item in loss]
-        loss_sum = functools.reduce(lambda a, b: a + b, loss)
-        loss_avg = loss_sum / len(loss)
+        loss = np.array([float(item["loss"].detach().cpu()) for item in loss])
+        loss_avg = loss.mean()
         self.log("train_loss", loss_avg)
 
-    @torch.enable_grad()
+    @ torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
         x = x.requires_grad_(True)
@@ -87,16 +80,15 @@ class Experiment(pl.LightningModule):
         return loss
 
     def validation_epoch_end(self, loss):
-        loss = [float(i.detach().cpu()) for i in loss]
-        loss_sum = functools.reduce(lambda a, b: a + b, loss)
-        loss_avg = loss_sum / len(loss)
+        loss = np.array([float(i.detach().cpu()) for i in loss])
+        loss_avg = loss.mean()
 
         if loss_avg <= self.val_loss:
             self.val_loss = loss_avg
             self.best_model_state_dict = self.model.state_dict()
         self.log("validation_loss", loss_avg)
 
-    @torch.enable_grad()
+    @ torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
         x = x.requires_grad_(True)
@@ -104,6 +96,12 @@ class Experiment(pl.LightningModule):
         out, _ = self.model(x)
         loss = self.loss_func(out, y)
         return loss
+
+    def test_epoch_end(self, loss):
+        loss = np.array([float(i.detach().cpu()) for i in loss])
+        loss_avg = loss.mean()
+
+        self.log("test_loss", loss_avg)
 
     # train your model
     def fit(self):
