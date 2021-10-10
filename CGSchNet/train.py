@@ -1,4 +1,5 @@
 import argparse
+import random
 
 from cgnet.molecule import CGMolecule
 from cgnet.network import (HarmonicLayer, CGnet, ForceLoss,
@@ -22,6 +23,13 @@ def get_embeddings(atom_num, sim_len):
     return np.tile(embeddings, [sim_len, 1])
 
 
+def get_stat(coords, forces, num_samples):
+    idx = random.sample(range(coords.shape[0]), num_samples)
+    coords, forces = coords[idx], forces[idx]
+    return GeometryStatistics(coords, backbone_inds='all', get_all_distances=True,
+                              get_backbone_angles=True, get_backbone_dihedrals=True)
+
+
 def main(args):
     coords = np.load(args.coords_npy)
     forces = np.load(args.forces_npy)
@@ -35,8 +43,7 @@ def main(args):
     data = MoleculeDataset(coords, forces, embeddings,
                            device=device)
 
-    stats = GeometryStatistics(coords, backbone_inds='all', get_all_distances=True,
-                               get_backbone_angles=True, get_backbone_dihedrals=True)
+    stats = get_stat(coords, forces, num_samples=10000)
 
     bond_list, bond_keys = stats.get_prior_statistics(
         features='Bonds', as_list=True)
