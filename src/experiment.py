@@ -40,7 +40,7 @@ class Experiment(pl.LightningModule):
             config.batch_size, config.coordinates_path, config.forces_path,
             config.train_test_rate, config.dataset)
 
-        self.loss_func = torch.nn.MSELoss()
+        self.loss_func = torch.nn.L1Loss(reduction="mean")
 
         print(self.model)
 
@@ -49,6 +49,9 @@ class Experiment(pl.LightningModule):
 
         self.tensor_dtype = torch.float32 if config.trainer.precision == 32 else torch.float16
 
+        self.warm_up = config.warm_up
+        self.norm = config.norm
+
     def configure_optimizers(self):
         params = self.model.parameters()
         optimizer: Optimizer = instantiate(
@@ -56,12 +59,17 @@ class Experiment(pl.LightningModule):
         scheduler = instantiate(self.config.scheduler, optimizer=optimizer)
         return [optimizer], [scheduler]
 
+    def cal_nn(self, x):
+        is_use_NN = self.current_epoch >= self.warm_up
+        return self.model(x, is_use_NN)
+
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
         x, y = batch
+        y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
-        out, _ = self.model(x)
+        out, _ = self.cal_nn(x)
         loss = self.loss_func(out, y)
         return loss
 
@@ -73,9 +81,10 @@ class Experiment(pl.LightningModule):
     @ torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
+        y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
-        out, _ = self.model(x)
+        out, _ = self.cal_nn(x)
         loss = self.loss_func(out, y)
         return loss
 
@@ -91,6 +100,7 @@ class Experiment(pl.LightningModule):
     @ torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
+        y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
         out, _ = self.model(x)

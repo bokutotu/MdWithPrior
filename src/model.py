@@ -18,13 +18,13 @@ from src.features.length import LengthLayer
 class CGnet(nn.Module):
     """A class for learning and reasoning about CGnet.
 
-    As described in the paper, the neural network that calculates the energy of 
-    sparse viewing uses the bond length, bond angle, and dihedral angle 
-    calculated from the coordinates as input. In addition, Prior Energy can be 
-    used selectively for the bond length, bond angle, and dihedral angle, 
+    As described in the paper, the neural network that calculates the energy of
+    sparse viewing uses the bond length, bond angle, and dihedral angle
+    calculated from the coordinates as input. In addition, Prior Energy can be
+    used selectively for the bond length, bond angle, and dihedral angle,
     respectively.
 
-    It is also possible, depending on the options, to adapt the previously 
+    It is also possible, depending on the options, to adapt the previously
     obtained standardization with zscore for all inputs.
 
     In this model, time series is supported.
@@ -103,7 +103,7 @@ class CGnet(nn.Module):
 
         return NormalizeLayer(mean, std)
 
-    def forward(self, x):
+    def forward(self, x, is_use_NN=True):
         # x shape is (batch size, number of atom(beads), 3) or
         # (batch size, length of featuers, number of atom(beads), 3)
 
@@ -117,15 +117,18 @@ class CGnet(nn.Module):
             length = self.length_normalize_layer(length)
             dihedral = self.dihedral_normalize_layer(dihedral)
 
-        net_input = torch.cat([angle, length, dihedral], dim=-1)
-
-        energy = self.net(net_input)
+        if is_use_NN:
+            net_input = torch.cat([angle, length, dihedral], dim=-1)
+            energy = self.net(net_input)
         # output shape is
         # (batch size, 1) or
         # (batch size, length of features, 1)
 
         if self.config.is_angle_prior:
-            energy = energy + self.angle_prior_layer(angle)
+            if is_use_NN:
+                energy = energy + self.angle_prior_layer(angle)
+            else:
+                energy = self.angle_prior_layer(angle)
         if self.config.is_length_prior:
             energy = energy + self.length_prior_layer(length)
         if self.config.is_dihedral_prior:
@@ -136,4 +139,5 @@ class CGnet(nn.Module):
                                     create_graph=True,
                                     retain_graph=True)
 
-        return force[0], energy
+        force = force[0]
+        return force, energy
