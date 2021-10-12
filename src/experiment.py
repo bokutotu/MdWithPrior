@@ -66,7 +66,7 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y = y / self.norm
+        # y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
         out, _ = self.cal_nn(x)
@@ -81,7 +81,7 @@ class Experiment(pl.LightningModule):
     @ torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
-        y = y / self.norm
+        # y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
         out, _ = self.cal_nn(x)
@@ -100,7 +100,7 @@ class Experiment(pl.LightningModule):
     @ torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
-        y = y / self.norm
+        # y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
         out, _ = self.model(x)
