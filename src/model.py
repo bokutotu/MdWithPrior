@@ -58,7 +58,7 @@ class CGnet(nn.Module):
         self.config = config
 
         self.cal_angle_layer = AngleLayer()
-        self.cal_dihedral_layer = DihedralLayer()
+        self.cal_dihedral_layer = DihedralLayer(num_atom)
         self.cal_length_layer = LengthLayer()
 
         # define Prior Energy Layer
@@ -67,7 +67,8 @@ class CGnet(nn.Module):
         if config.is_length_prior:
             self.length_prior_layer = PriorEnergyLayer(num_atom - 1)
         if config.is_dihedral_prior:
-            self.dihedral_prior_layer = PriorEnergyLayer(2 * (num_atom - 3))
+            self.dihedral_prior_layer = PriorEnergyLayer(
+                ((num_atom // 4) - 1) * 4)
 
         if config.is_normalize:
             self.angle_normalize_layer = self._define_normalize_layer(
@@ -86,7 +87,7 @@ class CGnet(nn.Module):
         input_dim = 0
         input_dim += num_atom - 1  # length dim
         input_dim += num_atom - 2  # angle dim
-        input_dim += (num_atom - 3) * 2  # dihedral number
+        input_dim += ((num_atom // 4) - 1) * 4  # dihedral number
         return input_dim
 
     def _define_normalize_layer(self, mean, std):

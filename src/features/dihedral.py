@@ -10,7 +10,7 @@ def dot(a, b):
     ----------
     a: torch.Tensor
         a is 3 dimentional array
-    b: torch.Tensor 
+    b: torch.Tensor
         b is 3 dimentional array
     """
     if a.size() != b.size():
@@ -20,12 +20,35 @@ def dot(a, b):
 
 class DihedralLayer(torch.nn.Module):
     """calulate dihedral sin and cosines
-    I'm using 
-    [stackoverflow](https://stackoverflow.com/questions/20305272/dihedral-torsion-angle-from-four-points-in-cartesian-coordinates-in-python) 
+    I'm using
+    [stackoverflow](https://stackoverflow.com/questions/20305272/dihedral-torsion-angle-from-four-points-in-cartesian-coordinates-in-python)
     as a reference.
     """
 
-    def _cal_dihedral(self, coordinates):
+    def __init__(self, num_atoms):
+        super().__init__()
+
+        dihedral_num = num_atoms // 4 - 1
+
+        self.register_buffer("p0_idx_phi", torch.tensor(
+            list(range(2, 2 + dihedral_num * 4, 4))))
+        self.register_buffer("p1_idx_phi", torch.tensor(
+            list(range(4, 4 + dihedral_num * 4, 4))))
+        self.register_buffer("p2_idx_phi", torch.tensor(
+            list(range(5, 5 + dihedral_num * 4, 4))))
+        self.register_buffer("p3_idx_phi", torch.tensor(
+            list(range(6, 6 + dihedral_num * 4, 4))))
+
+        self.register_buffer("p0_idx_psi", torch.tensor(
+            list(range(4, 2 + dihedral_num * 4, 4))))
+        self.register_buffer("p1_idx_psi", torch.tensor(
+            list(range(5, 4 + dihedral_num * 4, 4))))
+        self.register_buffer("p2_idx_psi", torch.tensor(
+            list(range(6, 5 + dihedral_num * 4, 4))))
+        self.register_buffer("p3_idx_psi", torch.tensor(
+            list(range(8, 6 + dihedral_num * 4, 4))))
+
+    def _cal_dihedral(self, coordinates, p0_idx, p1_idx, p2_idx, p3_idx, is_sin_cos=True):
         """calculate dihedral angles(cosine and sin) anly 3 dimentions Tensor
 
         Parameters
@@ -36,40 +59,37 @@ class DihedralLayer(torch.nn.Module):
         --------
         dimentions: torch.Tensor
         """
-        p0 = coordinates[::, 0:-3:, ::]
-        p1 = coordinates[::, 1:-2:, ::]
-        p2 = coordinates[::, 2:-1:, ::]
-        p3 = coordinates[::, 3::, ::]
+        p0 = torch.index_select(coordinates, dim=-2, index=p0_idx)
+        p1 = torch.index_select(coordinates, dim=-2, index=p1_idx)
+        p2 = torch.index_select(coordinates, dim=-2, index=p2_idx)
+        p3 = torch.index_select(coordinates, dim=-2, index=p3_idx)
 
-        b0 = -1.0 * (p1 - p0)
+        b0 = -1.0*(p1 - p0)
         b1 = p2 - p1
         b2 = p3 - p2
 
-        # normalize b1 so that it does not influence magnitude of vector
-        # rejections that come next
-        b1 = b1 / (torch.linalg.norm(b1, ) + sys.float_info.epsilon)
+        b0xb1 = torch.cross(b0, b1)
+        b1xb2 = torch.cross(b2, b1)
 
-        # vector rejections
-        # v = projection of b0 onto plane perpendicular to b1
-        #   = b0 minus component that aligns with b1
-        # w = projection of b2 onto plane perpendicular to b1
-        #   = b2 minus component that aligns with b1
-        v = b0 - dot(b0, b1) * b1
-        w = b2 - dot(b2, b1) * b1
+        b0xb1_x_b1xb2 = torch.cross(b0xb1, b1xb2, dim=-1)
 
-        # angle between v and w in a plane is the torsion angle
-        # v and w may not be normalized but that's fine since tan is y/x
-        x = dot(v, w)
-        y = dot(torch.cross(b1, v, dim=-1), w)
+        y = dot(b0xb1_x_b1xb2, b1) * \
+            (1.0 / torch.linalg.norm(b1, ord=2, dim=-1).unsqueeze(dim=-1))
+        x = dot(b0xb1, b1xb2)
+
         rad = torch.atan2(y, x)
-        return torch.cat([torch.sin(rad), torch.cos(rad)], dim=-1)
 
-    def forward(self, coordinates):
-        """calculate dihedral angles(cosine) of input coordinates 
+        if is_sin_cos:
+            return torch.cat([torch.sin(rad), torch.cos(rad)], dim=-1)
+        else:
+            return rad
+
+    def forward(self, coordinates, is_sin_cos=True):
+        """calculate dihedral angles(cosine) of input coordinates
 
         Parameters
         ----------
-        coordinates: torch.Tensor (batch, num_atoms(beads), dimentions) or 
+        coordinates: torch.Tensor (batch, num_atoms(beads), dimentions) or
         (batch, features length, num_atoms(beads), dimentions)
 
         Returens
@@ -80,11 +100,18 @@ class DihedralLayer(torch.nn.Module):
         """
         size = coordinates.size()
         if len(size) == 3:
-            return self._cal_dihedral(coordinates).view(size[0], 2 * (size[1] - 3))
+            psi = self._cal_dihedral(
+                coordinates, self.p0_idx_psi, self.p1_idx_psi, self.p2_idx_psi, self.p3_idx_psi, is_sin_cos)
+            phi = self._cal_dihedral(
+                coordinates, self.p0_idx_phi, self.p1_idx_phi, self.p2_idx_phi, self.p3_idx_phi, is_sin_cos)
+            return torch.cat([psi, phi], dim=-1).view(size[0], -1)
         elif len(size) == 4:
-            return self._cal_dihedral(
-                coordinates.view(size[0] * size[1], size[2], 3)) \
-                .view(size[0], size[1], 2 * (size[2] - 3))
+            coordinates = coordinates.view(size[0] * size[1], size[2], 3)
+            psi = self._cal_dihedral(
+                coordinates, self.p0_idx_psi, self.p1_idx_psi, self.p2_idx_psi, self.p3_idx_psi, is_sin_cos)
+            phi = self._cal_dihedral(
+                coordinates, self.p0_idx_phi, self.p1_idx_phi, self.p2_idx_phi, self.p3_idx_phi, is_sin_cos)
+            return torch.cat([psi, phi], dim=-1).view(size[0], size[1], -1)
         else:
             ValueError(
                 "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}"
