@@ -111,7 +111,7 @@ class CGnet(nn.Module):
         # cal features
         angle = self.cal_angle_layer(x)
         length = self.cal_length_layer(x)
-        dihedral = self.cal_dihedral_layer(x)
+        dihedral, dihedral_rad = self.cal_dihedral_layer(x)
 
         if self.config.is_normalize:
             angle = self.angle_normalize_layer(angle)

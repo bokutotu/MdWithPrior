@@ -79,12 +79,9 @@ class DihedralLayer(torch.nn.Module):
 
         rad = torch.atan2(y, x)
 
-        if is_sin_cos:
-            return torch.cat([torch.sin(rad), torch.cos(rad)], dim=-1)
-        else:
-            return rad
+        return torch.cat([torch.sin(rad), torch.cos(rad)], dim=-1), rad
 
-    def forward(self, coordinates, is_sin_cos=True):
+    def forward(self, coordinates,):
         """calculate dihedral angles(cosine) of input coordinates
 
         Parameters
@@ -100,19 +97,20 @@ class DihedralLayer(torch.nn.Module):
         """
         size = coordinates.size()
         if len(size) == 3:
-            psi = self._cal_dihedral(
-                coordinates, self.p0_idx_psi, self.p1_idx_psi, self.p2_idx_psi, self.p3_idx_psi, is_sin_cos)
-            phi = self._cal_dihedral(
-                coordinates, self.p0_idx_phi, self.p1_idx_phi, self.p2_idx_phi, self.p3_idx_phi, is_sin_cos)
-            return torch.cat([psi, phi], dim=-1).view(size[0], -1)
+            psi, phi, psi_rad, phi_rad = self._cal_psi_phi(coordinates)
+            return torch.cat([psi, phi], dim=-1).view(size[0], -1), (psi_rad, phi_rad)
         elif len(size) == 4:
             coordinates = coordinates.view(size[0] * size[1], size[2], 3)
-            psi = self._cal_dihedral(
-                coordinates, self.p0_idx_psi, self.p1_idx_psi, self.p2_idx_psi, self.p3_idx_psi, is_sin_cos)
-            phi = self._cal_dihedral(
-                coordinates, self.p0_idx_phi, self.p1_idx_phi, self.p2_idx_phi, self.p3_idx_phi, is_sin_cos)
-            return torch.cat([psi, phi], dim=-1).view(size[0], size[1], -1)
+            psi, phi, psi_rad, phi_rad = self._cal_psi_phi(coordinates)
+            return torch.cat([psi, phi], dim=-1).view(size[0], size[1], -1), (psi_rad, phi_rad)
         else:
             ValueError(
                 "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}"
                 .format(len(size)))
+
+    def _cal_psi_phi(self, coordinates):
+        psi, psi_rad = self._cal_dihedral(
+            coordinates, self.p0_idx_psi, self.p1_idx_psi, self.p2_idx_psi, self.p3_idx_psi)
+        phi, phi_rad = self._cal_dihedral(
+            coordinates, self.p0_idx_phi, self.p1_idx_phi, self.p2_idx_phi, self.p3_idx_phi)
+        return psi, phi, psi_rad, phi_rad
