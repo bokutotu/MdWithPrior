@@ -13,7 +13,7 @@ def get_statics(coordinates):
     atom_num = coordinates.size()[1]
     angles = AngleLayer()(coordinates)
     lengths = LengthLayer()(coordinates)
-    dihedrals = DihedralLayer(atom_num)(coordinates)
+    dihedrals, _ = DihedralLayer(atom_num)(coordinates)
 
     angle_mean = torch.mean(angles, dim=0)
     length_mean = torch.mean(lengths, dim=0)
