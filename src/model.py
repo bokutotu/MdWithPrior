@@ -121,6 +121,7 @@ class CGnet(nn.Module):
         if is_use_NN:
             net_input = torch.cat([angle, length, dihedral], dim=-1)
             energy = self.net(net_input)
+
         # output shape is
         # (batch size, 1) or
         # (batch size, length of features, 1)

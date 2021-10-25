@@ -98,11 +98,13 @@ class DihedralLayer(torch.nn.Module):
         size = coordinates.size()
         if len(size) == 3:
             psi, phi, psi_rad, phi_rad = self._cal_psi_phi(coordinates)
-            return torch.cat([psi, phi], dim=-1).view(size[0], -1), (psi_rad, phi_rad)
+            return torch.cat([psi, phi], dim=-1).view(size[0], -1), \
+                    (psi_rad.view(size[0], -1), phi_rad.view(size[0], -1))
         elif len(size) == 4:
             coordinates = coordinates.view(size[0] * size[1], size[2], 3)
             psi, phi, psi_rad, phi_rad = self._cal_psi_phi(coordinates)
-            return torch.cat([psi, phi], dim=-1).view(size[0], size[1], -1), (psi_rad, phi_rad)
+            return torch.cat([psi, phi], dim=-1).view(size[0], size[1], -1),\
+                    (psi_rad.view(size[0], size[1], -1), phi_rad.view(size[0], size[1], -1))
         else:
             ValueError(
                 "Input tensor must 3-dim or 4-dim torch.Tensor but inputed {}"
