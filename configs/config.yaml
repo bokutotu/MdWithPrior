@@ -61,3 +61,5 @@ hydra:
         override_dirname:
           kv_sep: '='
           item_sep: '/'
+warm_up: 1
+norm: 1
