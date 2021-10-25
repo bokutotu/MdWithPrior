@@ -8,6 +8,7 @@ from torch import Tensor
 from hydra.utils import instantiate
 
 from src.layers.prior import PriorEnergyLayer
+from src.layers.cmap import CMAP
 from src.layers.normalize import NormalizeLayer
 
 from src.features.angles import AngleLayer
@@ -53,7 +54,7 @@ class CGnet(nn.Module):
             self, config, num_atom,
             angle_mean=None, angle_std=None,
             dihedral_mean=None, dihedral_std=None,
-            length_mean=None, length_std=None):
+            length_mean=None, length_std=None, cmap=None):
         super().__init__()
         self.config = config
 
@@ -67,8 +68,7 @@ class CGnet(nn.Module):
         if config.is_length_prior:
             self.length_prior_layer = PriorEnergyLayer(num_atom - 1)
         if config.is_dihedral_prior:
-            self.dihedral_prior_layer = PriorEnergyLayer(
-                ((num_atom // 4) - 1) * 4)
+            self.cmap = cmap
 
         if config.is_normalize:
             self.angle_normalize_layer = self._define_normalize_layer(
@@ -133,7 +133,7 @@ class CGnet(nn.Module):
         if self.config.is_length_prior:
             energy = energy + self.length_prior_layer(length)
         if self.config.is_dihedral_prior:
-            energy = energy + self.dihedral_prior_layer(dihedral)
+            energy = energy + self.cmap(*dihedral_rad)
 
         force = torch.autograd.grad(-torch.sum(energy),
                                     x,

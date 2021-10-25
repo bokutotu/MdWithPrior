@@ -68,9 +68,12 @@ class CMAP(torch.nn.Module):
         self.register_buffer("grad_y", grad[1].reshape(-1))
         self.func = CMAPFowardFunc.apply
 
+        self.k = torch.nn.parameter.Parameter(torch.randn(1))
+
     def forward(self, psi, phi):
-        return self.func(self.energy, self.force_x, 
-                self.force_y, self.grad_x, self.grad_y, psi, phi)
+        energy = self.func(self.energy, self.force_x, 
+                self.force_y, self.grad_x, self.grad_y, psi, phi) * torch.abs(self.k)
+        return torch.sum(energy, dim=-2)
 
 
 def cal_cmap(psi, phi, grid_size):

@@ -11,6 +11,7 @@ from hydra.utils import instantiate
 from src.model import CGnet
 from src.dataset import MLPDataset, LSTMDataset
 from src.statics import get_statics
+from src.layers.cmap import CMAP, prepare_cmap_force_grad
 
 
 def setup_dataloader(cfg, coordinates_path, forces_path,
@@ -81,6 +82,9 @@ def setup_model(cfg):
     """
     coordinates = np.load(cfg.coordinates_path)
     stat = get_statics(torch.tensor(coordinates))
+    cmap, energy, force, grad = prepare_cmap_force_grad(
+            coordinates, cfg.grid_size, cfg.sigma, cfg.truncate)
+    cmap_layer = CMAP(energy, force, grad)
     num_atom = coordinates.shape[1]
 
     del coordinates
@@ -92,5 +96,6 @@ def setup_model(cfg):
         dihedral_mean=stat["dihedral"]["mean"],
         dihedral_std=stat["dihedral"]["std"],
         length_mean=stat["length"]["mean"],
-        length_std=stat["length"]["std"])
+        length_std=stat["length"]["std"],
+        cmap=cmap_layer)
     return net
