@@ -24,6 +24,12 @@ is_angle_prior: true
 is_length_prior: true
 is_dihedral_prior: true
 
+# for cmap
+grid_size: 50
+sigma: 2
+truncate: 4
+
+
 is_normalize: false
 
 # coordinates_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_coordinates.npy
