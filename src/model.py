@@ -83,6 +83,10 @@ class CGnet(nn.Module):
             )
         self.net = instantiate(config.models,
                                input_size=self._get_input_dim_from_num_atom(num_atom))
+        self.is_use_cudnn = not config.models._target_.split(
+            ".")[-1] in ["LSTM", "GRU"]
+        if not self.is_use_cudnn:
+            print("CUDNN disabled")
 
     def _get_input_dim_from_num_atom(self, num_atom):
         input_dim = 0
@@ -121,7 +125,8 @@ class CGnet(nn.Module):
 
         if is_use_NN:
             net_input = torch.cat([angle, length, dihedral], dim=-1)
-            energy = self.net(net_input)
+            with torch.backends.cudnn.flags(self.is_use_cudnn):
+                energy = self.net(net_input)
 
         # output shape is
         # (batch size, 1) or
