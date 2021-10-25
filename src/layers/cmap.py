@@ -30,11 +30,11 @@ class CMAPFowardFunc(torch.autograd.Function):
         force_x, force_y, grad_x, grad_y, index = ctx.saved_tensors
         backward_func = CMAPBackwardFunc.apply
         force_x, force_y = backward_func(
-                force_x, force_y, grad_x, grad_y, index)
+            force_x, force_y, grad_x, grad_y, index)
         return torch.zeros_like(force_x), torch.zeros_like(force_x), \
-                torch.zeros_like(force_x), torch.zeros_like(force_x), \
-                torch.zeros_like(force_x), (grad_output * force_x).requires_grad_(True), \
-                (grad_output * force_y).requires_grad_(True)
+            torch.zeros_like(force_x), torch.zeros_like(force_x), \
+            torch.zeros_like(force_x), (grad_output * force_x).requires_grad_(True), \
+            (grad_output * force_y).requires_grad_(True)
 
 
 class CMAPBackwardFunc(torch.autograd.Function):
@@ -43,8 +43,10 @@ class CMAPBackwardFunc(torch.autograd.Function):
     def forward(ctx, force_x, force_y, grad_x, grad_y, index):
         size = index.size()
         ctx.save_for_backward(grad_x, grad_y, index, size)
-        force_x = torch.index_select(force_x, 0, index.reshape(-1)).reshape(size)
-        force_y = torch.index_select(force_y, 0, index.reshape(-1)).reshape(size)
+        force_x = torch.index_select(
+            force_x, 0, index.reshape(-1)).reshape(size)
+        force_y = torch.index_select(
+            force_y, 0, index.reshape(-1)).reshape(size)
         return force_x.reshape(size), force_y.reshape(size)
 
     @staticmethod
@@ -54,7 +56,7 @@ class CMAPBackwardFunc(torch.autograd.Function):
         grad_x = torch.index_select(grad_x, 0, index.reshape(-1)).reshape(size)
         grad_y = torch.index_select(grad_y, 0, index.reshape(-1)).reshape(size)
         return torch.zeros_like(), (grad_output * grad_x).reshape(size), \
-                (grad_output * grad_y).reshape(size)
+            (grad_output * grad_y).reshape(size)
 
 
 class CMAP(torch.nn.Module):
@@ -71,9 +73,9 @@ class CMAP(torch.nn.Module):
         self.k = torch.nn.parameter.Parameter(torch.randn(1))
 
     def forward(self, psi, phi):
-        energy = self.func(self.energy, self.force_x, 
-                self.force_y, self.grad_x, self.grad_y, psi, phi) * torch.abs(self.k)
-        return torch.sum(energy, dim=-2)
+        energy = self.func(self.energy, self.force_x,
+                           self.force_y, self.grad_x, self.grad_y, psi, phi) * torch.abs(self.k)
+        return torch.sum(energy, dim=-1).unsqueeze(dim=-1)
 
 
 def cal_cmap(psi, phi, grid_size):
@@ -135,10 +137,13 @@ def cal_force_grad(energy, grid):
             # F = -∇E
             # ∇F = ∇(-∇E)
             # ∇F = - ∇**2E
-            force_grad_x[i, j] = (energy[x_max, j]+energy[x_min, j]-2*energy[i, j])/(delta ** 2)
-            force_grad_y[i, j] = (energy[i, y_max]+energy[i, y_min]-2*energy[i, j])/(delta ** 2)
+            force_grad_x[i, j] = (
+                energy[x_max, j]+energy[x_min, j]-2*energy[i, j])/(delta ** 2)
+            force_grad_y[i, j] = (
+                energy[i, y_max]+energy[i, y_min]-2*energy[i, j])/(delta ** 2)
 
     return force_grad_x, force_grad_y
+
 
 def prepare_cmap_force_grad(coord_npy, grid_size, sigma=2, truncate=4):
     _, (psi, phi) = DihedralLayer(coord_npy.shape[1])(torch.tensor(coord_npy))

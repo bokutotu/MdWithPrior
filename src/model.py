@@ -66,7 +66,8 @@ class CGnet(nn.Module):
         if config.is_angle_prior:
             self.angle_prior_layer = PriorEnergyLayer(num_atom - 2, angle_mean)
         if config.is_length_prior:
-            self.length_prior_layer = PriorEnergyLayer(num_atom - 1, length_mean)
+            self.length_prior_layer = PriorEnergyLayer(
+                num_atom - 1, length_mean)
         if config.is_dihedral_prior:
             self.cmap = cmap
 
