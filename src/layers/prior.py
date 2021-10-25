@@ -18,7 +18,7 @@ class PriorEnergyLayer(torch.nn.Module):
     def __init__(self, size):
         super().__init__()
         self.k = torch.nn.Parameter(torch.randn(size), requires_grad=True)
-        self.r = torch.nn.Parameter(torch.rand(size), requires_grad=True)
+        self.r = torch.nn.Parameter(torch.randn(size), requires_grad=True)
 
     def forward(self, x):
-        return torch.sum(self.k * (x - self.r)**2, dim=-1).unsqueeze(dim=-1)
+        return torch.sum((self.k * (x - self.r))**2, dim=-1).unsqueeze(dim=-1)
