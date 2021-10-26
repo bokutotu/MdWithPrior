@@ -8,17 +8,15 @@ class LSTM(torch.nn.Module):
         super().__init__()
         self.lstm = torch.nn.LSTM(
             input_size=input_size, hidden_size=hidden_size,
-            num_layers=num_layers-1, dropout=dropout)
-        self.last_lstm = torch.nn.LSTM(
-            input_size=hidden_size, hidden_size=output_size,
-            num_layers=1, dropout=dropout)
+            num_layers=num_layers, dropout=dropout)
+        self.k = torch.nn.Parameter(torch.randn(1), requires_grad=True)
 
     def forward(self, x):
         x = torch.transpose(x, 0, 1)
         x, _ = self.lstm(x)
-        x, _ = self.last_lstm(x)
+        x = torch.sum(x, dim=-1)
         x = torch.transpose(x, 0, 1)
-        return x
+        return torch.abs(x.unsqueeze(dim=-1) * self.k)
 
 
 # class LSTMCell(nn.Module):
