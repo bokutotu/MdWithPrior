@@ -74,7 +74,7 @@ def train(cfg):
         print(model)
 
         device = torch.device(
-            "cuda") if cfg.gpus is not None else torch.device("cpu")
+                "cuda:{}".format(cfg.gpus[0])) if cfg.gpus is not None else torch.device("cpu")
         model = model.to(device)
 
         train_loss = []
