@@ -8,6 +8,7 @@ from src.load import load_from_run_id
 
 
 def simulate_step_mlp(coordinates, velocities, model, weight, step, dt):
+    
     pred_forces, _ = model(coordinates[step].unsqueeze(dim=0))
     pred_forces = pred_forces[0]
     cal_coordinates, cal_velocities = cal_next_coord_using_pred_forces(
@@ -19,11 +20,16 @@ def simulate_step_mlp(coordinates, velocities, model, weight, step, dt):
 
 
 def simulate_step_lstm(coordinates, velocities, model, weight, step, feature_len, dt):
+    input_features = coordinates.detach()
     input_features = coordinates[step:step+feature_len]
     input_features = input_features.unsqueeze(dim=0)
-    cal_coordinates, cal_velocities = model(input_features)
-    coordinates[step+feature_len] = cal_coordinates[-1]
-    velocities[step+feature_len] = cal_velocities[-1]
+    pred_forces, _ = model(input_features)
+    pred_forces = pred_forces.detach()
+    cal_coordinates, cal_velocities = cal_next_coord_using_pred_forces(
+        coordinates[step], velocities[step], pred_forces[-1,-1], weight, dt
+    )
+    coordinates[step+feature_len] = cal_coordinates
+    velocities[step+feature_len] = cal_velocities
     return coordinates, velocities, model
 
 
@@ -49,6 +55,7 @@ def simulate(
 
     print("  start simulation  ")
     for step in range(step):
+        model.eval()
         print("step number {}".format(step + 1))
         if mode == "MLP":
             result_coordinates, result_velocities, model = \
@@ -76,7 +83,7 @@ def main(args):
     model = load_from_run_id(args.run_id)
 
     mode = model.config.models._target_.split(".")[-1]
-    feature_len = model.config.dataset.features_lengthS if mode == "LSTM" \
+    feature_len = model.config.dataset.features_length if mode == "LSTM" \
         else 1
 
     simulate(
