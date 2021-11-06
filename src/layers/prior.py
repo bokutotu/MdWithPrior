@@ -17,6 +17,10 @@ class PriorEnergyLayer(torch.nn.Module):
 
     def __init__(self, size, r=None):
         super().__init__()
+        if r is not None:
+            print("set mean parameters")
+        else:
+            print("not set mean")
         self.k = torch.nn.Parameter(torch.randn(size), requires_grad=True)
         if r is None:
             self.r = torch.nn.Parameter(torch.randn(size), requires_grad=True)

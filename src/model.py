@@ -1,14 +1,9 @@
-from typing import Tuple
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch import Tensor
 
 from hydra.utils import instantiate
 
 from src.layers.prior import PriorEnergyLayer
-from src.layers.cmap import CMAP
 from src.layers.normalize import NormalizeLayer
 
 from src.features.angles import AngleLayer
@@ -64,11 +59,16 @@ class CGnet(nn.Module):
 
         # define Prior Energy Layer
         if config.is_angle_prior:
-            self.angle_prior_layer = PriorEnergyLayer(num_atom - 2, angle_mean)
+            self.angle_prior_layer = PriorEnergyLayer(num_atom - 2,
+            angle_mean if config.use_prior_mean else None)
         if config.is_length_prior:
             self.length_prior_layer = PriorEnergyLayer(
-                num_atom - 1, length_mean)
+                num_atom - 1, length_mean if config.use_prior_mean else None)
         if config.is_dihedral_prior:
+            self.dihedral_prior_layer = PriorEnergyLayer(
+                dihedral_mean.size()[0],
+                dihedral_mean if config.use_prior_mean else None)
+        if config.is_cmap:
             self.cmap = cmap
 
         if config.is_normalize:
@@ -140,6 +140,8 @@ class CGnet(nn.Module):
         if self.config.is_length_prior:
             energy = energy + self.length_prior_layer(length)
         if self.config.is_dihedral_prior:
+            energy = energy + self.dihedral_prior_layer(dihedral)
+        if self.config.is_cmap:
             energy = energy + self.cmap(*dihedral_rad)
 
         force = torch.autograd.grad(-torch.sum(energy),

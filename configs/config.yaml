@@ -23,6 +23,9 @@ train_test_rate: 0.75
 is_angle_prior: true
 is_length_prior: true
 is_dihedral_prior: true
+is_cmap: true
+
+use_prior_mean: true
 
 # for cmap
 grid_size: 50
@@ -32,8 +35,8 @@ truncate: 4
 
 is_normalize: false
 
-# coordinates_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_coordinates.npy
-# forces_path: /home/bokutotu/HDD/Lab/MdWithPrior/tests/data/ala2_forces.npy
+# coordinates_path: /home/bokutotu/HDD/Lab/data/min_npy/c_trj.npy
+# forces_path: /home/bokutotu/HDD/Lab/data/min_npy/f_trj.npy
 coordinates_path: /home/bokutotu/HDD/Lab/data/NPY/c_trj.npy
 forces_path: /home/bokutotu/HDD/Lab/data/NPY/f_trj.npy
 
@@ -61,5 +64,5 @@ hydra:
         override_dirname:
           kv_sep: '='
           item_sep: '/'
-warm_up: 1
+warm_up: 0
 norm: 1

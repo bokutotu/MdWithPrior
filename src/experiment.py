@@ -40,7 +40,7 @@ class Experiment(pl.LightningModule):
             config.batch_size, config.coordinates_path, config.forces_path,
             config.train_test_rate, config.dataset)
 
-        self.loss_func = torch.nn.L1Loss(reduction="mean")
+        self.loss_func = torch.nn.MSELoss(reduction="mean")
 
         print(self.model)
 
