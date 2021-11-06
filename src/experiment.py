@@ -1,11 +1,9 @@
 import os
 from urllib.parse import urlparse
-import functools
 
 import torch
 from torch import Tensor
 from torch.optim import Optimizer
-import torch.nn.functional as F
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
@@ -13,12 +11,9 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 import numpy as np
-import mlflow
 
-from src.statics import get_statics
 from src.data_module import DataModule
-from src.setup import setup_model, setup_dataloader
-from src.model import CGnet
+from src.setup import setup_model
 
 
 class Experiment(pl.LightningModule):
@@ -66,7 +61,6 @@ class Experiment(pl.LightningModule):
     @torch.enable_grad()
     def training_step(self, batch, batch_idx):
         x, y = batch
-        # y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
         out, _ = self.cal_nn(x)
@@ -78,10 +72,9 @@ class Experiment(pl.LightningModule):
         loss_avg = loss.mean()
         self.log("train_loss", loss_avg)
 
-    @ torch.enable_grad()
+    @torch.enable_grad()
     def validation_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
-        # y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
         out, _ = self.cal_nn(x)
@@ -97,10 +90,9 @@ class Experiment(pl.LightningModule):
             self.best_model_state_dict = self.model.state_dict()
         self.log("validation_loss", loss_avg)
 
-    @ torch.enable_grad()
+    @torch.enable_grad()
     def test_step(self, batch: Tensor, batch_idx: int):
         x, y = batch
-        # y = y / self.norm
         x = x.requires_grad_(True)
         y = y.requires_grad_(True)
         out, _ = self.model(x)

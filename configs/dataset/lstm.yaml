@@ -2,4 +2,4 @@
 
 _target_: src.dataset.LSTMDataset
 
-features_length: 64
+features_length: 32

@@ -70,7 +70,7 @@ class DataModule(pl.LightningDataModule):
             self.train,
             batch_size=self.batch_size,
             # sampler=RandomSampler(self.train),
-            # num_workers=multiprocessing.cpu_count()
+            num_workers=multiprocessing.cpu_count()
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -78,7 +78,7 @@ class DataModule(pl.LightningDataModule):
             self.val,
             batch_size=self.batch_size,
             # sampler=RandomSampler(self.val),
-            # num_workers=multiprocessing.cpu_count(),
+            num_workers=multiprocessing.cpu_count(),
             shuffle=False
         )
 
@@ -87,7 +87,7 @@ class DataModule(pl.LightningDataModule):
             self.test,
             batch_size=self.batch_size,
             # sampler=RandomSampler(self.test),
-            # num_workers=multiprocessing.cpu_count(),
+            num_workers=multiprocessing.cpu_count(),
             shuffle=False
         )
 

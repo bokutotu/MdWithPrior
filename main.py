@@ -1,7 +1,6 @@
 from src.experiment import Experiment
 import hydra
 from omegaconf import DictConfig
-from mlflow.pytorch import save_model
 from src.train import train
 
 import os
@@ -11,9 +10,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
 def main(config: DictConfig) -> None:
-    # exp = Experiment(config)
-    # exp.run()
-    train(config)
+    exp = Experiment(config)
+    exp.run()
+    # train(config)
 
 
 if __name__ == "__main__":
