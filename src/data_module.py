@@ -59,11 +59,14 @@ class DataModule(pl.LightningDataModule):
         # make assignments here (val/train/test split)
         # called on every GPUs
         self.train = instantiate(
-            self.config, coordinates=self.train_coord, forces=self.train_force)
+            self.config, coordinates=self.train_coord, forces=self.train_force, 
+            norm=self.config.norm)
         self.val = instantiate(
-            self.config, coordinates=self.val_coord, forces=self.val_force)
+            self.config, coordinates=self.val_coord, forces=self.val_force, 
+            norm=self.config.norm)
         self.test = instantiate(
-            self.config, coordinates=self.test_coord, forces=self.test_force)
+            self.config, coordinates=self.test_coord, forces=self.test_force, 
+            norm=self.config.norm)
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(

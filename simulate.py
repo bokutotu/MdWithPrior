@@ -7,10 +7,10 @@ from src.simulater.leapfrog import cal_next_coord_using_pred_forces, get_weight_
 from src.load import load_from_run_id
 
 
-def simulate_step_mlp(coordinates, velocities, model, weight, step, dt):
+def simulate_step_mlp(coordinates, velocities, model, weight, step, dt, norm):
     
     pred_forces, _ = model(coordinates[step].unsqueeze(dim=0))
-    pred_forces = pred_forces[0]
+    pred_forces = pred_forces[0] * norm
     cal_coordinates, cal_velocities = cal_next_coord_using_pred_forces(
         coordinates[step], velocities[step], pred_forces, weight, dt
     )
@@ -19,14 +19,15 @@ def simulate_step_mlp(coordinates, velocities, model, weight, step, dt):
     return coordinates, velocities, model
 
 
-def simulate_step_lstm(coordinates, velocities, model, weight, step, feature_len, dt):
+def simulate_step_lstm(coordinates, velocities, model, weight, step, feature_len, dt, norm):
     input_features = coordinates.detach()
     input_features = coordinates[step:step+feature_len]
     input_features = input_features.unsqueeze(dim=0)
     pred_forces, _ = model(input_features)
     pred_forces = pred_forces.detach()
+    pred_forces = pred_forces * norm
     cal_coordinates, cal_velocities = cal_next_coord_using_pred_forces(
-        coordinates[step], velocities[step], pred_forces[-1,-1], weight, dt
+        coordinates[step+feature_len], velocities[step+feature_len], pred_forces[-1,-1], weight, dt
     )
     coordinates[step+feature_len] = cal_coordinates
     velocities[step+feature_len] = cal_velocities
@@ -35,7 +36,7 @@ def simulate_step_lstm(coordinates, velocities, model, weight, step, feature_len
 
 def simulate(
         init_coordinates, init_velocities, model, step, mode, save_name,
-        feature_len=None, dt=0.002):
+        feature_len=None, dt=0.002, norm=None):
 
     if mode not in ["MLP", "LSTM"]:
         ValueError("mode {} is not impl".format(mode))
@@ -61,12 +62,12 @@ def simulate(
             result_coordinates, result_velocities, model = \
                 simulate_step_mlp(
                     result_coordinates, result_velocities, model,
-                    weight, step, float(args.dt))
+                    weight, step, float(args.dt), norm)
         else:
             result_coordinates, result_velocities, model = \
                 simulate_step_lstm(
                     result_coordinates, result_velocities,
-                    model, weight, step, feature_len, float(dt))
+                    model, weight, step, feature_len, float(dt), norm)
 
     if mode == "MLP":
         result_coordinates = result_coordinates[1:-1:]
@@ -83,12 +84,14 @@ def main(args):
     model = load_from_run_id(args.run_id)
 
     mode = model.config.models._target_.split(".")[-1]
+    norm = float(model.config.norm)
+    norm = torch.tensor(norm)
     feature_len = model.config.dataset.features_length if mode == "LSTM" \
         else 1
 
     simulate(
         coordinates, velocities, model,
-        args.num_steps, mode, args.save_name, feature_len)
+        args.num_steps, mode, args.save_name, feature_len, dt=args.dt, norm=norm)
 
 
 if __name__ == "__main__":

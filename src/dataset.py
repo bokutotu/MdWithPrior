@@ -5,9 +5,9 @@ from torch.utils.data import Dataset
 
 class MLPDataset(Dataset):
 
-    def __init__(self, coordinates, forces):
+    def __init__(self, coordinates, forces, norm):
         self.coordinates = coordinates
-        self.forces = forces
+        self.forces = forces / norm
 
     def __len__(self):
         return len(self.coordinates)
@@ -18,9 +18,9 @@ class MLPDataset(Dataset):
 
 class LSTMDataset(Dataset):
 
-    def __init__(self, coordinates, forces, features_length):
+    def __init__(self, coordinates, forces, features_length, norm):
         self.coordinates = coordinates
-        self.forces = forces
+        self.forces = forces / norm
         self.features_length = features_length
 
     def __len__(self):

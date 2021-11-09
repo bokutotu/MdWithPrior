@@ -15,7 +15,7 @@ from src.layers.cmap import CMAP, prepare_cmap_force_grad
 
 
 def setup_dataloader(cfg, coordinates_path, forces_path,
-                     train_test_rate, batch_size):
+                     train_test_rate, batch_size, norm):
     """Set up dataloader
     Split the data from the npy file given by cfg with train, validation,
     and test, and create and return a data loader for each.
@@ -53,9 +53,11 @@ def setup_dataloader(cfg, coordinates_path, forces_path,
     test_force = forces[val_last_idx: -1]
 
     train_dataset = instantiate(
-        cfg, coordinates=train_coord, forces=train_force)
-    val_dataset = instantiate(cfg, coordinates=val_coord, forces=val_force)
-    test_dataset = instantiate(cfg, coordinates=test_coord, forces=test_force)
+        cfg, coordinates=train_coord, forces=train_force, norm=norm)
+    val_dataset = instantiate(
+        cfg, coordinates=val_coord, forces=val_force, norm=norm)
+    test_dataset = instantiate(
+        cfg, coordinates=test_coord, forces=test_force, norm=norm)
 
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size,
@@ -88,9 +90,11 @@ def setup_model(cfg):
     """
     coordinates = np.load(cfg.coordinates_path)
     stat = get_statics(torch.tensor(coordinates))
-    cmap, energy, force, grad = prepare_cmap_force_grad(
-            coordinates, cfg.grid_size, cfg.sigma, cfg.truncate)
-    cmap_layer = CMAP(energy, force, grad)
+    cmap_layer = None
+    if cfg.is_cmap:
+        cmap, energy, force, grad = prepare_cmap_force_grad(
+                coordinates, cfg.grid_size, cfg.sigma, cfg.truncate)
+        cmap_layer = CMAP(energy, force, grad)
     num_atom = coordinates.shape[1]
 
     del coordinates
