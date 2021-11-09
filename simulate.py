@@ -13,21 +13,26 @@ def leap_frog(coord, velocities, forces):
     return next_coord, next_velocities
 
 
+def mse(A, B):
+    return ((A - B)**2).mean()
+
+
 def simulate_step_mlp(coordinates, velocities, model, step):
     
-    pred_forces, _ = model(coordinates[step].unsqueeze(dim=0))
-    pred_forces = pred_forces[0]
+    input_features = torch.tensor(coordinates[step], requires_grad=True).unsqueeze(dim=0)
+    pred_forces, _ = model(input_features)
+    pred_forces = pred_forces[0].detach().numpy()
     cal_coordinates, cal_velocities = leap_frog(
         coordinates[step], velocities[step], pred_forces)
+    print(mse(coordinates[step+1], cal_coordinates))
     coordinates[step+1] = cal_coordinates
     velocities[step+1] = cal_velocities
     return coordinates, velocities, model
 
 
 def simulate_step_lstm(coordinates, velocities, model, step, feature_len,):
-    input_features = coordinates.detach()
     input_features = coordinates[step:step+feature_len]
-    input_features = input_features.unsqueeze(dim=0)
+    input_features = torch.tensor(input_features, requires_grad=True).unsqueeze(dim=0)
     pred_forces, _ = model(input_features)
     pred_forces = pred_forces.detach()
     pred_forces = pred_forces[-1, -1]
@@ -45,16 +50,13 @@ def simulate(
     if mode not in ["MLP", "LSTM"]:
         ValueError("mode {} is not impl".format(mode))
 
-    init_coordinates = torch.tensor(init_coordinates, requires_grad=True)
-    init_velocities = torch.tensor(init_velocities, requires_grad=True)
+    # init_coordinates = torch.tensor(init_coordinates, requires_grad=True)
+    # init_velocities = torch.tensor(init_velocities, requires_grad=True)
 
-    atom_num = init_coordinates.size()[1]
+    # atom_num = init_coordinates.size()[1]
 
-    result_coordinates = torch.zeros((step + feature_len, atom_num, 3))
-    result_velocities = torch.zeros((step + feature_len, atom_num, 3))
-
-    result_coordinates[0:feature_len] = init_coordinates[0:feature_len]
-    result_velocities[0:feature_len] = init_velocities[0:feature_len]
+    result_coordinates = init_coordinates[:step + feature_len]
+    result_velocities = init_velocities[:step + feature_len]
 
     print("  start simulation  ")
     for step in range(step):
@@ -75,7 +77,7 @@ def simulate(
     else:
         result_coordinates = result_coordinates[feature_len:-1:]
 
-    np.save(save_name, result_coordinates.detach().cpu().numpy())
+    np.save(save_name, result_coordinates)
 
 
 def main(args):
