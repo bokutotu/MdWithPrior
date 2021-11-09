@@ -15,7 +15,7 @@ from src.layers.cmap import CMAP, prepare_cmap_force_grad
 
 
 def setup_dataloader(cfg, coordinates_path, forces_path,
-                     train_test_rate, batch_size, norm):
+                     train_test_rate, batch_size):
     """Set up dataloader
     Split the data from the npy file given by cfg with train, validation,
     and test, and create and return a data loader for each.
@@ -53,11 +53,11 @@ def setup_dataloader(cfg, coordinates_path, forces_path,
     test_force = forces[val_last_idx: -1]
 
     train_dataset = instantiate(
-        cfg, coordinates=train_coord, forces=train_force, norm=norm)
+        cfg, coordinates=train_coord, forces=train_force)
     val_dataset = instantiate(
-        cfg, coordinates=val_coord, forces=val_force, norm=norm)
+        cfg, coordinates=val_coord, forces=val_force)
     test_dataset = instantiate(
-        cfg, coordinates=test_coord, forces=test_force, norm=norm)
+        cfg, coordinates=test_coord, forces=test_force)
 
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size,
@@ -89,6 +89,9 @@ def setup_model(cfg):
     CGnet: torch.Modeule
     """
     coordinates = np.load(cfg.coordinates_path)
+    forces = np.load(cfg.forces_path)
+    forces_std = forces.std()
+    forces_mean = forces.mean()
     stat = get_statics(torch.tensor(coordinates))
     cmap_layer = None
     if cfg.is_cmap:
@@ -107,5 +110,8 @@ def setup_model(cfg):
         dihedral_std=stat["dihedral"]["std"],
         length_mean=stat["length"]["mean"],
         length_std=stat["length"]["std"],
-        cmap=cmap_layer)
+        cmap=cmap_layer,
+        forces_std = forces_std,
+        forces_mean=forces_mean
+    )
     return net

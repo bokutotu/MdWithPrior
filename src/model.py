@@ -49,7 +49,8 @@ class CGnet(nn.Module):
             self, config, num_atom,
             angle_mean=None, angle_std=None,
             dihedral_mean=None, dihedral_std=None,
-            length_mean=None, length_std=None, cmap=None):
+            length_mean=None, length_std=None, cmap=None, 
+            forces_std=None, forces_mean=None):
         super().__init__()
         self.config = config
 
@@ -87,6 +88,9 @@ class CGnet(nn.Module):
             ".")[-1] in ["LSTM", "GRU"]
         if not self.is_use_cudnn:
             print("CUDNN disabled")
+
+        self.register_buffer("std", torch.tensor(forces_std))
+        self.register_buffer("mean", torch.tensor(forces_mean))
 
     def _get_input_dim_from_num_atom(self, num_atom):
         input_dim = 0
@@ -150,4 +154,5 @@ class CGnet(nn.Module):
                                     retain_graph=True)
 
         force = force[0]
+        force = self.std * force + self.mean
         return force, energy

@@ -62,7 +62,7 @@ def train(cfg):
         print("set up dataloader")
         train_dataloader, val_dataloader, test_dataloader = setup_dataloader(
             cfg.dataset, cfg.coordinates_path, cfg.forces_path,
-            cfg.train_test_rate, cfg.batch_size, cfg.norm
+            cfg.train_test_rate, cfg.batch_size
         )
         print("len trian dataloader is {}".format(len((train_dataloader))))
 

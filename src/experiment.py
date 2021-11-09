@@ -33,7 +33,7 @@ class Experiment(pl.LightningModule):
 
         self.data_module = DataModule(
             config.batch_size, config.coordinates_path, config.forces_path,
-            config.train_test_rate, config.dataset, norm=config.norm)
+            config.train_test_rate, config.dataset)
 
         self.loss_func = torch.nn.MSELoss(reduction="mean")
 
@@ -45,7 +45,6 @@ class Experiment(pl.LightningModule):
         self.tensor_dtype = torch.float32 if config.trainer.precision == 32 else torch.float16
 
         self.warm_up = config.warm_up
-        self.norm = config.norm
 
     def configure_optimizers(self):
         params = self.model.parameters()

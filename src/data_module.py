@@ -14,7 +14,7 @@ from src.dataset import MLPDataset, LSTMDataset
 
 class DataModule(pl.LightningDataModule):
     def __init__(self, batch_size, coordinates_path,
-                 forces_path, train_test_rate, config,norm):
+                 forces_path, train_test_rate, config):
         super().__init__()
 
         coordinates = np.load(coordinates_path)
@@ -33,7 +33,6 @@ class DataModule(pl.LightningDataModule):
 
         self.config = config
         self.batch_size = batch_size
-        self.norm = norm
         self.train = None
         self.val = None
         self.test = None
@@ -47,14 +46,11 @@ class DataModule(pl.LightningDataModule):
         # make assignments here (val/train/test split)
         # called on every GPUs
         self.train = instantiate(
-            self.config, coordinates=self.train_coord, forces=self.train_force, 
-            norm=self.norm)
+            self.config, coordinates=self.train_coord, forces=self.train_force)
         self.val = instantiate(
-            self.config, coordinates=self.val_coord, forces=self.val_force, 
-            norm=self.norm)
+            self.config, coordinates=self.val_coord, forces=self.val_force,)
         self.test = instantiate(
-            self.config, coordinates=self.test_coord, forces=self.test_force, 
-            norm=self.norm)
+            self.config, coordinates=self.test_coord, forces=self.test_force)
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
