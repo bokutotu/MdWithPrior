@@ -35,7 +35,7 @@ class Experiment(pl.LightningModule):
             config.batch_size, config.coordinates_path, config.forces_path,
             config.train_test_rate, config.dataset)
 
-        self.loss_func = torch.nn.MSELoss(reduction="mean")
+        self.loss_func = torch.nn.L1Loss(reduction="mean")
 
         print(self.model)
 
@@ -45,6 +45,12 @@ class Experiment(pl.LightningModule):
         self.tensor_dtype = torch.float32 if config.trainer.precision == 32 else torch.float16
 
         self.warm_up = config.warm_up
+
+    def save(self):
+        artifact_path = urlparse(self.logger._tracking_uri).path
+        self.artifact_path = os.path.join(
+            artifact_path, self.logger.experiment_id, self.logger.run_id, "artifacts")
+        torch.save(self.best_model_state_dict, self.artifact_path + "/model.pth")
 
     def configure_optimizers(self):
         params = self.model.parameters()
@@ -120,12 +126,9 @@ class Experiment(pl.LightningModule):
 
     # run your whole experiments
     def run(self):
-        artifact_path = urlparse(self.logger._tracking_uri).path
-        artifact_path = os.path.join(
-            artifact_path, self.logger.experiment_id, self.logger.run_id, "artifacts")
         self.fit()
         self.trainer.test()
-        torch.save(self.best_model_state_dict, artifact_path + "/model.pth")
+        # self.save()
 
     def log_artifact(self, artifact_path: str):
         self.logger.experiment.log_artifact(self.logger.run_id, artifact_path)
